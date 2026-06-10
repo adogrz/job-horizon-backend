@@ -161,6 +161,15 @@ CREATE TABLE TipoRecomendacion
 );
 GO
 
+CREATE TABLE Pais
+(
+    IdPais INT IDENTITY (1,1) NOT NULL,
+    Nombre VARCHAR(100)       NOT NULL,
+    CONSTRAINT PK_Pais PRIMARY KEY (IdPais),
+    CONSTRAINT UQ_Pais_Nombre UNIQUE (Nombre)
+);
+GO
+
 CREATE TABLE TipoParticipacion
 (
     IdTipoParticipacion INT         NOT NULL IDENTITY (1,1),

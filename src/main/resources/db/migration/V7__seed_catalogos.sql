@@ -119,6 +119,20 @@ VALUES ('PROFESIONAL'),
        ('ACADEMICA');
 
 -- ------------------------------------------------------------
+-- Países para participación en eventos
+-- ------------------------------------------------------------
+INSERT INTO Pais (Nombre)
+VALUES ('El Salvador'),
+       ('Guatemala'),
+       ('Honduras'),
+       ('Nicaragua'),
+       ('Costa Rica'),
+       (N'Panamá'),
+       (N'México'),
+       ('Estados Unidos');
+GO
+
+-- ------------------------------------------------------------
 -- Tipos de participación en eventos
 -- ------------------------------------------------------------
 INSERT INTO TipoParticipacion (Nombre)
