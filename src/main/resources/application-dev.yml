@@ -13,6 +13,8 @@ spring:
     restart:
       enabled: true
 
-resend:
-  api-key: ${RESEND_API_KEY}
-  from: ${RESEND_FROM}
+jobhorizon:
+  cors:
+    allowed-origins: ${CORS_ORIGINS}
+  frontend:
+    base-url: ${FRONTEND_URL}
