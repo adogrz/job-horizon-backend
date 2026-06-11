@@ -171,7 +171,6 @@ CREATE TABLE Pais
     CONSTRAINT UQ_Pais_Nombre UNIQUE (Nombre)
 );
 GO
-
 CREATE TABLE TipoParticipacion
 (
     IdTipoParticipacion INT         NOT NULL IDENTITY (1,1),

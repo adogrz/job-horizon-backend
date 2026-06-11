@@ -119,7 +119,6 @@ VALUES ('PROFESIONAL'),
        ('PERSONAL'),
        ('ACADEMICA');
 
--- ------------------------------------------------------------
 -- Países para participación en eventos
 -- ------------------------------------------------------------
 INSERT INTO Pais (Nombre)

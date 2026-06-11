@@ -97,7 +97,6 @@
 			<artifactId>resend-java</artifactId>
 			<version>4.13.0</version>
 		</dependency>
-
 		<!-- JWT -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
