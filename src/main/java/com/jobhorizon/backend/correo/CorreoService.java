@@ -1,0 +1,129 @@
+package com.jobhorizon.backend.correo;
+
+import com.jobhorizon.backend.config.FrontendProperties;
+import com.jobhorizon.backend.config.ResendProperties;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+public class CorreoService {
+
+    private final Resend resend;
+    private final ResendProperties resendProperties;
+    private final FrontendProperties frontendProperties;
+
+    public CorreoService(Resend resend, ResendProperties resendProperties, FrontendProperties frontendProperties) {
+        this.resend = resend;
+        this.resendProperties = resendProperties;
+        this.frontendProperties = frontendProperties;
+    }
+
+    public void enviarCorreoDesbloqueo(String destinatario, String token) {
+        String linkDesbloqueo = frontendProperties.baseUrl() + "/desbloquear?token=" + token;
+        
+        String htmlContent = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #333333;
+                        background-color: #f4f6f9;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background: #ffffff;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                    }
+                    .header {
+                        background-color: #1e293b;
+                        color: #ffffff;
+                        padding: 30px;
+                        text-align: center;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 24px;
+                        font-weight: 600;
+                    }
+                    .content {
+                        padding: 40px 30px;
+                    }
+                    .btn {
+                        display: inline-block;
+                        background-color: #2563eb;
+                        color: #ffffff !important;
+                        padding: 12px 24px;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                        margin-top: 20px;
+                        text-align: center;
+                    }
+                    .footer {
+                        background-color: #f8fafc;
+                        padding: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #64748b;
+                        border-top: 1px solid #e2e8f0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>JobHorizon</h1>
+                    </div>
+                    <div class="content">
+                        <h2>Cuenta Bloqueada</h2>
+                        <p>Hemos detectado varios intentos fallidos de inicio de sesión en tu cuenta. Por motivos de seguridad, tu cuenta ha sido bloqueada temporalmente.</p>
+                        <p>Para desbloquear tu cuenta y volver a acceder a JobHorizon, por favor haz clic en el siguiente enlace:</p>
+                        <div style="text-align: center;">
+                            <a href="%s" class="btn">Desbloquear Mi Cuenta</a>
+                        </div>
+                        <p style="margin-top: 30px; font-size: 14px; color: #64748b;">
+                            Si el botón no funciona, puedes copiar y pegar la siguiente URL en tu navegador:
+                            <br/>
+                            <a href="%s">%s</a>
+                        </p>
+                        <p>Este enlace expirará en las próximas 24 horas.</p>
+                        <p>Si tú no solicitaste este desbloqueo o no has intentado iniciar sesión, por favor ignora este correo o ponte en contacto con soporte.</p>
+                    </div>
+                    <div class="footer">
+                        &copy; 2026 JobHorizon. Todos los derechos reservados.
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.formatted(linkDesbloqueo, linkDesbloqueo, linkDesbloqueo);
+
+        CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(resendProperties.fromEmail())
+                .to(destinatario)
+                .subject("Desbloqueo de cuenta - JobHorizon")
+                .html(htmlContent)
+                .build();
+
+        try {
+            log.info("Enviando correo de desbloqueo a {}", destinatario);
+            resend.emails().send(params);
+            log.info("Correo de desbloqueo enviado con éxito a {}", destinatario);
+        } catch (ResendException e) {
+            log.error("Error al enviar el correo de desbloqueo a {}: {}", destinatario, e.getMessage(), e);
+            throw new RuntimeException("No se pudo enviar el correo de desbloqueo", e);
+        }
+    }
+}

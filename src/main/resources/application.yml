@@ -1,10 +1,17 @@
 spring:
   application:
     name: JobHorizon
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: false
     properties:
       hibernate:
@@ -12,3 +19,15 @@ spring:
 
 server:
   port: 8080
+
+jobhorizon:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-hours: 24
+  resend:
+    api-key: ${RESEND_API_KEY}
+    from-email: ${RESEND_FROM:noreply@jobhorizon.com}
+  cors:
+    allowed-origins: ${CORS_ORIGINS}
+  frontend:
+    base-url: ${FRONTEND_URL}

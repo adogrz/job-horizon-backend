@@ -61,14 +61,15 @@ VALUES ('TIEMPO_COMPLETO'),
 -- ------------------------------------------------------------
 -- Niveles educativos
 -- Referenciados por OfertaTrabajo y FormacionAcademica.
+-- OrdenComparacion permite comparaciones robustas en el matching.
 -- ------------------------------------------------------------
-INSERT INTO NivelEducativo (Nombre)
-VALUES ('BACHILLERATO'),
-       ('TECNICO'),
-       ('LICENCIATURA'),
-       ('MAESTRIA'),
-       ('DOCTORADO'),
-       ('INGENIERIA');
+INSERT INTO NivelEducativo (Nombre, OrdenComparacion)
+VALUES ('BACHILLERATO', 1),
+       ('TECNICO', 2),
+       ('INGENIERIA', 3),
+       ('LICENCIATURA', 4),
+       ('MAESTRIA', 5),
+       ('DOCTORADO', 6);
 
 -- ------------------------------------------------------------
 -- Modalidades de trabajo
@@ -117,6 +118,19 @@ INSERT INTO TipoRecomendacion (Nombre)
 VALUES ('PROFESIONAL'),
        ('PERSONAL'),
        ('ACADEMICA');
+
+-- Países para participación en eventos
+-- ------------------------------------------------------------
+INSERT INTO Pais (Nombre)
+VALUES ('El Salvador'),
+       ('Guatemala'),
+       ('Honduras'),
+       ('Nicaragua'),
+       ('Costa Rica'),
+       (N'Panamá'),
+       (N'México'),
+       ('Estados Unidos');
+GO
 
 -- ------------------------------------------------------------
 -- Tipos de participación en eventos
@@ -504,3 +518,62 @@ VALUES (N'Español'),
        (N'Inglés'),
        (N'Francés'),
        (N'Portugués');
+GO
+
+-- ============================================================
+--  Seguridad: Roles, Privilegios y asignaciones RolPrivilegio
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- Roles del sistema
+-- ------------------------------------------------------------
+INSERT INTO Rol (Nombre, Descripcion)
+VALUES ('ADMIN', N'Administrador del sistema con acceso total'),
+       ('POSTULANTE', N'Usuario que busca empleo y aplica a ofertas de trabajo'),
+       ('EMPRESA', N'Empresa que publica y gestiona ofertas de trabajo');
+GO
+
+-- ------------------------------------------------------------
+-- Privilegios del sistema
+-- Nombre: clave usada en @PreAuthorize y en el JWT
+-- NombreMenu: texto visible en el frontend
+-- Ruta: ruta del frontend (NULL si es acción pura sin pantalla)
+-- ------------------------------------------------------------
+INSERT INTO Privilegio (Nombre, NombreMenu, Ruta)
+VALUES ('GESTIONAR_USUARIOS',  N'Gestión de Usuarios',  '/admin/usuarios'),
+       ('GESTIONAR_ROLES',     N'Gestión de Roles',     '/admin/roles'),
+       ('GESTIONAR_CATALOGOS', N'Gestión de Catálogos', '/admin/catalogos'),
+       ('VER_REPORTES',        N'Reportes',             '/admin/reportes'),
+       ('GESTIONAR_OFERTAS',   N'Mis Ofertas',          '/ofertas/gestionar'),
+       ('VER_OFERTAS',         N'Ofertas de Trabajo',   '/ofertas'),
+       ('APLICAR_OFERTA',      N'Aplicar a Oferta',     NULL),
+       ('VER_ASPIRANTES',      N'Aspirantes',           '/ofertas/aspirantes'),
+       ('GESTIONAR_PERFIL',    N'Mi Perfil',            '/perfil');
+GO
+
+-- ------------------------------------------------------------
+-- RolPrivilegio: asignación de privilegios por rol
+-- ADMIN: todos los privilegios
+-- ------------------------------------------------------------
+INSERT INTO RolPrivilegio (IdRol, IdPrivilegio)
+SELECT r.IdRol, p.IdPrivilegio
+FROM Rol r
+         CROSS JOIN Privilegio p
+WHERE r.Nombre = 'ADMIN';
+GO
+
+-- POSTULANTE: ver ofertas, aplicar, gestionar su perfil
+INSERT INTO RolPrivilegio (IdRol, IdPrivilegio)
+SELECT r.IdRol, p.IdPrivilegio
+FROM Rol r
+         JOIN Privilegio p ON p.Nombre IN ('VER_OFERTAS', 'APLICAR_OFERTA', 'GESTIONAR_PERFIL')
+WHERE r.Nombre = 'POSTULANTE';
+GO
+
+-- EMPRESA: gestionar sus ofertas, ver aspirantes, gestionar su perfil, ver ofertas
+INSERT INTO RolPrivilegio (IdRol, IdPrivilegio)
+SELECT r.IdRol, p.IdPrivilegio
+FROM Rol r
+         JOIN Privilegio p ON p.Nombre IN ('VER_OFERTAS', 'GESTIONAR_OFERTAS', 'VER_ASPIRANTES', 'GESTIONAR_PERFIL')
+WHERE r.Nombre = 'EMPRESA';
+GO

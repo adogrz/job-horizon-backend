@@ -6,6 +6,7 @@ CREATE TABLE Postulante
     FechaNacimiento DATE         NOT NULL,
     NumDocumento    VARCHAR(20)  NOT NULL,
     Nup             VARCHAR(20)  NULL,
+    Nit             VARCHAR(20)  NULL,
     Direccion       VARCHAR(300) NOT NULL,
     FotoUrl         VARCHAR(500) NULL, -- ruta o URL de la foto
     IdGenero        INT          NOT NULL,
@@ -29,7 +30,14 @@ CREATE TABLE Postulante
                 OR (IdTipoDocumento <> 1 AND LEN(NumDocumento) > 0)
             ),
     CONSTRAINT CK_Postulante_Nup
-        CHECK (Nup IS NULL OR (LEN(Nup) = 9 AND Nup NOT LIKE '%[^0-9]%'))
+        CHECK (Nup IS NULL OR (LEN(Nup) = 9 AND Nup NOT LIKE '%[^0-9]%')),
+    CONSTRAINT CK_Postulante_Nit
+        CHECK (Nit IS NULL OR (
+            -- Formato tradicional de NIT: 0000-000000-000-0
+            Nit LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9]'
+                -- Formato unificado moderno con DUI: 00000000-0
+                OR Nit LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9]'
+            ))
 );
 GO
 
@@ -168,14 +176,18 @@ CREATE TABLE Evento
     IdUsuario           INT          NOT NULL,
     NombreEvento        VARCHAR(200) NOT NULL,
     Lugar               VARCHAR(200) NOT NULL,
+    Anfitrion           VARCHAR(200) NOT NULL,
     Fecha               DATE         NOT NULL,
     IdTipoParticipacion INT          NOT NULL,
+    IdPais              INT          NOT NULL,
     CONSTRAINT PK_Evento PRIMARY KEY (NumEvento, IdUsuario),
     CONSTRAINT FK_Evento_Postulante
         FOREIGN KEY (IdUsuario) REFERENCES Postulante (IdUsuario)
             ON DELETE CASCADE,
     CONSTRAINT FK_Evento_TipoParticipacion
-        FOREIGN KEY (IdTipoParticipacion) REFERENCES TipoParticipacion (IdTipoParticipacion)
+        FOREIGN KEY (IdTipoParticipacion) REFERENCES TipoParticipacion (IdTipoParticipacion),
+    CONSTRAINT FK_Evento_Pais
+        FOREIGN KEY (IdPais) REFERENCES Pais (IdPais)
 );
 GO
 
@@ -187,6 +199,7 @@ CREATE TABLE Publicacion
     LugarPublicacion VARCHAR(200) NOT NULL,
     Fecha            DATE         NOT NULL,
     Isbn             VARCHAR(20)  NULL, -- puede ser NULL (artículos sin ISBN)
+    Edicion          VARCHAR(100) NULL,
     CONSTRAINT PK_Publicacion PRIMARY KEY (NumPublicacion, IdUsuario),
     CONSTRAINT FK_Publicacion_Postulante
         FOREIGN KEY (IdUsuario) REFERENCES Postulante (IdUsuario)
