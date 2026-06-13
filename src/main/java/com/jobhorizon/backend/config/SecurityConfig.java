@@ -79,6 +79,7 @@ public class SecurityConfig {
                     "/auth/solicitar-desbloqueo",
                     "/auth/desbloquear"
                 ).permitAll()
+                .requestMatchers(HttpMethod.GET, "/catalogos/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )
