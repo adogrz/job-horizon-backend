@@ -1,0 +1,279 @@
+### Peticiones de Prueba para el CRUD de Postulante y Catálogos
+### Diseñado para el HTTP Client integrado de JetBrains (IntelliJ IDEA)
+
+@host = http://localhost:8080
+@email = postulante.test@jobhorizon.com
+@password = SecurePassword123!
+
+### ==========================================
+### 1. Autenticación y Registro (Públicos)
+### ==========================================
+
+### Registro de Postulante Nuevo
+POST {{host}}/auth/registro/postulante
+Content-Type: application/json
+
+{
+  "correo": "{{email}}",
+  "password": "{{password}}",
+  "nombres": "Juan Carlos",
+  "apellidos": "Pérez Gómez",
+  "fechaNacimiento": "1996-05-15",
+  "numDocumento": "05123456-7",
+  "direccion": "Calle Principal 123, San Salvador",
+  "idGenero": 1,
+  "idTipoDocumento": 1,
+  "idDistrito": 1
+}
+
+> {%
+  // Si el registro inicia sesión automáticamente y retorna token, lo guardamos
+  if (response.status === 201 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token", response.body.data.token);
+      client.log("Token capturado desde registro con éxito.");
+  }
+%}
+
+### Login de Usuario (Captura Automática de Token)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+  if (response.status === 200 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token", response.body.data.token);
+      client.log("Token capturado y guardado en variable global 'auth_token'.");
+  }
+%}
+
+
+### ==========================================
+### 2. Catálogos (Públicos)
+### ==========================================
+
+### Obtener Géneros
+GET {{host}}/catalogos/generos
+
+### Obtener Tipos de Documento
+GET {{host}}/catalogos/tipos-documento
+
+### Obtener Departamentos
+GET {{host}}/catalogos/departamentos
+
+### Obtener Distritos de un Departamento (ID: 1)
+GET {{host}}/catalogos/departamentos/1/distritos
+
+### Obtener Niveles Educativos
+GET {{host}}/catalogos/niveles-educativos
+
+### Obtener Categorías de Habilidad
+GET {{host}}/catalogos/categorias-habilidad
+
+### Obtener Habilidades de una Categoría (ID: 1)
+GET {{host}}/catalogos/categorias-habilidad/1/habilidades
+
+### Obtener Niveles de Habilidad
+GET {{host}}/catalogos/niveles-habilidad
+
+### Obtener Idiomas
+GET {{host}}/catalogos/idiomas
+
+### Obtener Niveles de Idioma
+GET {{host}}/catalogos/niveles-idioma
+
+### Obtener Tipos de Red Social
+GET {{host}}/catalogos/tipos-red-social
+
+
+### ==========================================
+### 3. Perfil y Datos Personales (Protegidos)
+### ==========================================
+
+### Obtener Perfil Consolidado Completo
+GET {{host}}/postulante/perfil
+Authorization: Bearer {{auth_token}}
+
+### Obtener Datos Personales del Postulante
+GET {{host}}/postulante/perfil/datos-personales
+Authorization: Bearer {{auth_token}}
+
+### Actualizar Datos Personales del Postulante
+PUT {{host}}/postulante/perfil/datos-personales
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "nombres": "Juan Carlos (Editado)",
+  "apellidos": "Pérez Gómez",
+  "fechaNacimiento": "1996-05-15",
+  "numDocumento": "05123456-7",
+  "nup": "123456789",
+  "nit": "0614-150596-101-3",
+  "direccion": "Residencial Santa Teresa #23, Santa Tecla",
+  "fotoUrl": "https://images.jobhorizon.com/profiles/juan_perez.png",
+  "idGenero": 1,
+  "idTipoDocumento": 1,
+  "idDistrito": 2
+}
+
+
+### ==========================================
+### 4. Sub-secciones del Perfil (Protegidos)
+### ==========================================
+
+### --- Teléfonos ---
+
+### Obtener Teléfonos
+GET {{host}}/postulante/perfil/telefonos
+Authorization: Bearer {{auth_token}}
+
+### Agregar Teléfono
+POST {{host}}/postulante/perfil/telefonos
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "telefono": "7788-9900"
+}
+
+### Eliminar Teléfono
+DELETE {{host}}/postulante/perfil/telefonos/7788-9900
+Authorization: Bearer {{auth_token}}
+
+
+### --- Redes Sociales ---
+
+### Obtener Redes Sociales
+GET {{host}}/postulante/perfil/redes-sociales
+Authorization: Bearer {{auth_token}}
+
+### Agregar o Actualizar Red Social (Upsert)
+POST {{host}}/postulante/perfil/redes-sociales
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "idTipoRedSocial": 1,
+  "url": "https://linkedin.com/in/juancarlosperez"
+}
+
+### Eliminar Red Social (ID Tipo: 1)
+DELETE {{host}}/postulante/perfil/redes-sociales/1
+Authorization: Bearer {{auth_token}}
+
+
+### --- Experiencia Laboral ---
+
+### Obtener Experiencias
+GET {{host}}/postulante/perfil/experiencias
+Authorization: Bearer {{auth_token}}
+
+### Agregar Experiencia Laboral (NumExp es automático)
+POST {{host}}/postulante/perfil/experiencias
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "nombreEmpresa": "Tech Solutions S.A.",
+  "puesto": "Desarrollador Backend Senior",
+  "fechaInicio": "2022-01-15",
+  "fechaFin": null,
+  "trabajoActual": true,
+  "funciones": "Diseño de APIs robustas en Spring Boot 3 y SQL Server.",
+  "telefonoContacto": "2233-4455",
+  "correoContacto": "rrhh@techsolutions.com"
+}
+
+### Actualizar Experiencia Laboral (NumExp: 1)
+PUT {{host}}/postulante/perfil/experiencias/1
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "nombreEmpresa": "Tech Solutions S.A. (Editada)",
+  "puesto": "Lead Backend Engineer",
+  "fechaInicio": "2022-01-15",
+  "fechaFin": "2026-06-01",
+  "trabajoActual": false,
+  "funciones": "Liderazgo técnico de equipos ágiles.",
+  "telefonoContacto": "2233-4455",
+  "correoContacto": "rrhh@techsolutions.com"
+}
+
+### Eliminar Experiencia Laboral (NumExp: 1)
+DELETE {{host}}/postulante/perfil/experiencias/1
+Authorization: Bearer {{auth_token}}
+
+
+### --- Formación Académica ---
+
+### Obtener Formaciones
+GET {{host}}/postulante/perfil/formaciones
+Authorization: Bearer {{auth_token}}
+
+### Agregar Formación Académica (NumFormacion es automático)
+POST {{host}}/postulante/perfil/formaciones
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "institucion": "Universidad de El Salvador",
+  "titulo": "Ingeniería en Sistemas Informáticos",
+  "idNivelEducativo": 4,
+  "fechaInicio": "2015-02-01",
+  "fechaFin": "2020-12-15",
+  "enCurso": false
+}
+
+### Eliminar Formación Académica (NumFormacion: 1)
+DELETE {{host}}/postulante/perfil/formaciones/1
+Authorization: Bearer {{auth_token}}
+
+
+### --- Habilidades ---
+
+### Obtener Habilidades
+GET {{host}}/postulante/perfil/habilidades
+Authorization: Bearer {{auth_token}}
+
+### Agregar o Actualizar Habilidad (Upsert)
+POST {{host}}/postulante/perfil/habilidades
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "idHabilidad": 1,
+  "idNivelHabilidad": 3
+}
+
+### Eliminar Habilidad (ID Habilidad: 1)
+DELETE {{host}}/postulante/perfil/habilidades/1
+Authorization: Bearer {{auth_token}}
+
+
+### --- Idiomas ---
+
+### Obtener Idiomas
+GET {{host}}/postulante/perfil/idiomas
+Authorization: Bearer {{auth_token}}
+
+### Agregar o Actualizar Idioma (Upsert)
+POST {{host}}/postulante/perfil/idiomas
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "idIdioma": 1,
+  "idNivelLectura": 3,
+  "idNivelEscritura": 2,
+  "idNivelConversacion": 2,
+  "idNivelEscucha": 3
+}
+
+### Eliminar Idioma (ID Idioma: 1)
+DELETE {{host}}/postulante/perfil/idiomas/1
+Authorization: Bearer {{auth_token}}
