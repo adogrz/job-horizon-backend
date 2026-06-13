@@ -31,3 +31,12 @@ jobhorizon:
     allowed-origins: ${CORS_ORIGINS}
   frontend:
     base-url: ${FRONTEND_URL}
+
+springdoc:
+  swagger-ui:
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    display-request-duration: true
+  api-docs:
+    path: /v3/api-docs
