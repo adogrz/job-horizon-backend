@@ -1,10 +1,6 @@
 ### Peticiones de Prueba para el CRUD de Postulante y Catálogos
 ### Diseñado para el HTTP Client integrado de JetBrains (IntelliJ IDEA)
 
-@host = http://localhost:8080
-@email = postulante.test@jobhorizon.com
-@password = SecurePassword123!
-
 ### ==========================================
 ### 1. Autenticación y Registro (Públicos)
 ### ==========================================
