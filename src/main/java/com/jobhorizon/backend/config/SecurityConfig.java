@@ -79,7 +79,7 @@ public class SecurityConfig {
                     "/auth/solicitar-desbloqueo",
                     "/auth/desbloquear"
                 ).permitAll()
-                .requestMatchers(HttpMethod.GET, "/catalogos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/catalogos/**", "/ofertas/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
