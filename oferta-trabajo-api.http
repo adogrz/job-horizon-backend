@@ -1,0 +1,159 @@
+### Peticiones de Prueba para el CRUD de Ofertas de Trabajo y Búsquedas
+### Diseñado para el HTTP Client integrado de JetBrains (IntelliJ IDEA)
+
+### ==========================================
+### 1. Autenticación de la Empresa (Captura de Token)
+### ==========================================
+
+### Registro de Empresa de Prueba (En caso de que no exista)
+POST {{host}}/auth/registro/empresa
+Content-Type: application/json
+
+{
+  "correo": "empresa.test@jobhorizon.com",
+  "password": "SecurePassword123!",
+  "nombreComercial": "Tecnologías del Futuro S.A.",
+  "razonSocial": "Tecnologías del Futuro y Comunicaciones S.A. de C.V.",
+  "nit": "0614-150695-102-1",
+  "sitioWeb": "https://www.tecnologiasfuturo.com",
+  "descripcion": "Empresa dedicada al desarrollo de software.",
+  "idDistrito": 287
+}
+
+> {%
+  if (response.status === 201 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token", response.body.data.token);
+      client.log("Token de empresa registrado y capturado con éxito.");
+  }
+%}
+
+### Login de Empresa (Captura automática del token de empresa)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "empresa.test@jobhorizon.com",
+  "password": "SecurePassword123!"
+}
+
+> {%
+  if (response.status === 200 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token", response.body.data.token);
+      client.log("Token de empresa capturado en 'auth_token'.");
+  }
+%}
+
+
+### ==========================================
+### 2. Nuevos Catálogos (Públicos)
+### ==========================================
+
+### Obtener Tipos de Contrato
+GET {{host}}/catalogos/tipos-contrato
+
+### Obtener Modalidades de Trabajo
+GET {{host}}/catalogos/modalidades
+
+### Obtener Estados de Oferta
+GET {{host}}/catalogos/estados-oferta
+
+
+### ==========================================
+### 3. CRUD de Ofertas de Trabajo (Protegido - Empresa)
+### ==========================================
+
+### Publicar Nueva Oferta de Trabajo (CAPTURA AUTOMÁTICA DE ID)
+POST {{host}}/ofertas
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "titulo": "Desarrollador Java y Spring Boot Junior",
+  "descripcion": "Buscamos un Ingeniero de Software Junior para sumarse a nuestro equipo de backend. Experiencia básica en desarrollo web.",
+  "salarioMin": 900.00,
+  "salarioMax": 1200.00,
+  "numVacantes": 2,
+  "aniosExperienciaMinima": 1,
+  "fechaVencimiento": "2026-08-30",
+  "idTipoContrato": 1,
+  "idNivelEducativo": 3,
+  "idModalidad": 2,
+  "idDistrito": 1,
+  "habilidades": [
+    { "idHabilidad": 1, "idNivelHabilidad": 2 },
+    { "idHabilidad": 5, "idNivelHabilidad": 1 }
+  ],
+  "idiomas": [
+    { "idIdioma": 2, "idNivelIdioma": 3 }
+  ]
+}
+
+> {%
+  if (response.status === 201 && response.body.data && response.body.data.id) {
+      client.global.set("oferta_id", response.body.data.id);
+      client.log("ID de Oferta de Trabajo capturado con éxito: " + response.body.data.id);
+  }
+%}
+
+
+### Obtener Detalle de la Oferta Creada (Público)
+GET {{host}}/ofertas/{{oferta_id}}
+
+
+### Actualizar Oferta de Trabajo (Incrementando requisitos y salario)
+PUT {{host}}/ofertas/{{oferta_id}}
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "titulo": "Desarrollador Java y Spring Boot Mid-Senior",
+  "descripcion": "Buscamos un Ingeniero de Software intermedio para liderar microservicios backend en la nube.",
+  "salarioMin": 1500.00,
+  "salarioMax": 2000.00,
+  "numVacantes": 1,
+  "aniosExperienciaMinima": 3,
+  "fechaVencimiento": "2026-09-15",
+  "idTipoContrato": 1,
+  "idNivelEducativo": 3,
+  "idModalidad": 3,
+  "idDistrito": 1,
+  "habilidades": [
+    { "idHabilidad": 1, "idNivelHabilidad": 3 },
+    { "idHabilidad": 5, "idNivelHabilidad": 3 },
+    { "idHabilidad": 8, "idNivelHabilidad": 2 }
+  ],
+  "idiomas": [
+    { "idIdioma": 2, "idNivelIdioma": 4 }
+  ]
+}
+
+
+### Cambiar Estado de la Oferta a CERRADA (Triggea notificaciones automáticas por correo)
+# NOTA: Asegúrate de usar un ID de Estado válido (CERRADA suele ser ID: 3 en base a la semilla)
+PATCH {{host}}/ofertas/{{oferta_id}}/estado?idEstado=3
+Authorization: Bearer {{auth_token}}
+
+
+### Listar Todas las Ofertas de una Empresa específica
+# Usar el ID de la Empresa (que es el ID de usuario de la empresa autenticada)
+GET {{host}}/ofertas/empresa/9
+
+
+### ==========================================
+### 4. Búsqueda, Filtros y Paginación (Público)
+### ==========================================
+
+### Búsqueda de todas las vacantes en estado ACTIVA (Paginado)
+GET {{host}}/ofertas
+
+### Búsqueda filtrada por texto de búsqueda (Spring Boot / Java)
+GET {{host}}/ofertas?query=Java
+
+### Búsqueda filtrada por modalidad de trabajo (REMOTO = ID: 2)
+GET {{host}}/ofertas?idModalidad=2
+
+### Búsqueda filtrada por salario mínimo esperado
+GET {{host}}/ofertas?salarioMin=1400
+
+### Búsqueda filtrada por habilidades específicas (Java = ID: 1)
+GET {{host}}/ofertas?habilidades=1
