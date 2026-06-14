@@ -126,4 +126,88 @@ public class CorreoService {
             throw new RuntimeException("No se pudo enviar el correo de desbloqueo", e);
         }
     }
+
+    public void enviarCorreoNotificacionOfertaCerrada(String destinatario, String tituloOferta, String nombreEmpresa) {
+        String htmlContent = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #333333;
+                        background-color: #f4f6f9;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background: #ffffff;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                    }
+                    .header {
+                        background-color: #1e293b;
+                        color: #ffffff;
+                        padding: 30px;
+                        text-align: center;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 24px;
+                        font-weight: 600;
+                    }
+                    .content {
+                        padding: 40px 30px;
+                    }
+                    .footer {
+                        background-color: #f8fafc;
+                        padding: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #64748b;
+                        border-top: 1px solid #e2e8f0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>JobHorizon</h1>
+                    </div>
+                    <div class="content">
+                        <h2>Notificación de Proceso Finalizado</h2>
+                        <p>Te escribimos para informarte que el proceso de selección para la vacante de <strong>%s</strong> en la empresa <strong>%s</strong> a la que aplicaste ha sido cerrado.</p>
+                        <p>Queremos agradecerte el tiempo y esfuerzo dedicados al postularte a esta oportunidad. Aunque en esta ocasión el proceso ha finalizado, tu perfil seguirá disponible en nuestra plataforma para futuras oportunidades que se adapten a tu perfil.</p>
+                        <p>Te deseamos el mayor de los éxitos en tu búsqueda de empleo y desarrollo profesional.</p>
+                        <p>Atentamente,<br/>El equipo de JobHorizon</p>
+                    </div>
+                    <div class="footer">
+                        &copy; 2026 JobHorizon. Todos los derechos reservados.
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.formatted(tituloOferta, nombreEmpresa);
+
+        CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(resendProperties.fromEmail())
+                .to(destinatario)
+                .subject("Actualización de postulación: " + tituloOferta + " - JobHorizon")
+                .html(htmlContent)
+                .build();
+
+        try {
+            log.info("Enviando correo de finalización de oferta a {}", destinatario);
+            resend.emails().send(params);
+            log.info("Correo de finalización de oferta enviado con éxito a {}", destinatario);
+        } catch (ResendException e) {
+            log.error("Error al enviar el correo de finalización de oferta a {}: {}", destinatario, e.getMessage(), e);
+            // No lanzamos excepción para evitar que el cambio de estado de la oferta falle por problemas de correo
+        }
+    }
 }
