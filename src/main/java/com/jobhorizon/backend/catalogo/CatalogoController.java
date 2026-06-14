@@ -8,7 +8,6 @@ import com.jobhorizon.backend.genero.Genero;
 import com.jobhorizon.backend.genero.GeneroRepository;
 import com.jobhorizon.backend.habilidad.CategoriaHabilidad;
 import com.jobhorizon.backend.habilidad.CategoriaHabilidadRepository;
-import com.jobhorizon.backend.habilidad.Habilidad;
 import com.jobhorizon.backend.habilidad.HabilidadRepository;
 import com.jobhorizon.backend.habilidad.dto.HabilidadResponse;
 import com.jobhorizon.backend.idioma.Idioma;
@@ -31,6 +30,12 @@ import com.jobhorizon.backend.tiporecomendacion.TipoRecomendacion;
 import com.jobhorizon.backend.tiporecomendacion.TipoRecomendacionRepository;
 import com.jobhorizon.backend.tiporedsocial.TipoRedSocial;
 import com.jobhorizon.backend.tiporedsocial.TipoRedSocialRepository;
+import com.jobhorizon.backend.tipocontrato.TipoContrato;
+import com.jobhorizon.backend.tipocontrato.TipoContratoRepository;
+import com.jobhorizon.backend.modalidad.Modalidad;
+import com.jobhorizon.backend.modalidad.ModalidadRepository;
+import com.jobhorizon.backend.estadooferta.EstadoOferta;
+import com.jobhorizon.backend.estadooferta.EstadoOfertaRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -76,6 +81,9 @@ public class CatalogoController {
     private final PaisRepository paisRepository;
     private final TipoParticipacionRepository tipoParticipacionRepository;
     private final TipoRedSocialRepository tipoRedSocialRepository;
+    private final TipoContratoRepository tipoContratoRepository;
+    private final ModalidadRepository modalidadRepository;
+    private final EstadoOfertaRepository estadoOfertaRepository;
 
     @Operation(summary = "Listar géneros", description = "Retorna todos los géneros disponibles (ej. Masculino, Femenino). Usar el `id` al registrar o actualizar datos personales.")
     @ApiResponses({
@@ -219,5 +227,32 @@ public class CatalogoController {
     @GetMapping("/tipos-red-social")
     public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<List<TipoRedSocial>>> listarTiposRedSocial() {
         return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Tipos de red social obtenidos con éxito", tipoRedSocialRepository.findAll()));
+    }
+
+    @Operation(summary = "Listar tipos de contrato", description = "Retorna todos los tipos de contrato disponibles (ej. Tiempo Completo, Medio Tiempo, Freelance). Usar el `id` al registrar ofertas de trabajo.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de tipos de contrato obtenida con éxito.")
+    })
+    @GetMapping("/tipos-contrato")
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<List<TipoContrato>>> listarTiposContrato() {
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Tipos de contrato obtenidos con éxito", tipoContratoRepository.findAll()));
+    }
+
+    @Operation(summary = "Listar modalidades de trabajo", description = "Retorna todas las modalidades de trabajo disponibles (ej. Presencial, Remoto, Híbrido). Usar el `id` al registrar ofertas de trabajo.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de modalidades obtenida con éxito.")
+    })
+    @GetMapping("/modalidades")
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<List<Modalidad>>> listarModalidades() {
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Modalidades obtenidas con éxito", modalidadRepository.findAll()));
+    }
+
+    @Operation(summary = "Listar estados de oferta", description = "Retorna todos los estados de oferta de trabajo disponibles (ej. Activa, Pausada, Cerrada). Usar el `id` al gestionar ofertas de trabajo.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de estados de oferta obtenida con éxito.")
+    })
+    @GetMapping("/estados-oferta")
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<List<EstadoOferta>>> listarEstadosOferta() {
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Estados de oferta obtenidos con éxito", estadoOfertaRepository.findAll()));
     }
 }
