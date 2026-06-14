@@ -1,0 +1,114 @@
+### Peticiones de Prueba para el CRUD de Empresa
+### Diseñado para el HTTP Client integrado de JetBrains (IntelliJ IDEA)
+
+### ==========================================
+### 1. Autenticación y Registro (Públicos)
+### ==========================================
+
+### Registro de Empresa Nueva
+POST {{host}}/auth/registro/empresa
+Content-Type: application/json
+
+{
+  "correo": "empresa.test@jobhorizon.com",
+  "password": "SecurePassword123!",
+  "nombreComercial": "Tecnologías del Futuro S.A.",
+  "razonSocial": "Tecnologías del Futuro y Comunicaciones S.A. de C.V.",
+  "nit": "0614-150695-102-1",
+  "sitioWeb": "https://www.tecnologiasfuturo.com",
+  "descripcion": "Empresa dedicada al desarrollo de software y soluciones integrales de TI.",
+  "idDistrito": 1
+}
+
+> {%
+  // Si el registro inicia sesión automáticamente y retorna token, lo guardamos
+  if (response.status === 201 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token", response.body.data.token);
+      client.log("Token de empresa capturado desde registro con éxito.");
+  }
+%}
+
+### Login de Empresa (Captura Automática de Token)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "empresa.test@jobhorizon.com",
+  "password": "SecurePassword123!"
+}
+
+> {%
+  if (response.status === 200 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token", response.body.data.token);
+      client.log("Token de empresa capturado y guardado en variable global 'auth_token'.");
+  }
+%}
+
+
+### ==========================================
+### 2. Perfil de Empresa (Protegidos)
+### ==========================================
+
+### Obtener Perfil de Empresa (Incluye Teléfonos)
+GET {{host}}/empresa/perfil
+Authorization: Bearer {{auth_token}}
+
+
+### Actualizar Perfil de Empresa
+PUT {{host}}/empresa/perfil
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "nombreComercial": "Tecnologías del Futuro S.A. (Editado)",
+  "razonSocial": "Tecnologías del Futuro y Comunicaciones S.A. de C.V.",
+  "nit": "0614-150695-102-1",
+  "sitioWeb": "https://www.tecnologiasfuturo-editado.com",
+  "descripcion": "Descripción actualizada: Líderes en transformación digital y desarrollo ágil.",
+  "logoUrl": "https://storage.jobhorizon.com/logos/tf_logo.png",
+  "idDistrito": 2
+}
+
+
+### ==========================================
+### 3. Teléfonos de Empresa (Protegidos)
+### ==========================================
+
+### Agregar Teléfono Fijo (Formato ####-####)
+POST {{host}}/empresa/perfil/telefonos
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "telefono": "2255-8899"
+}
+
+
+### Agregar Teléfono Celular/Internacional (Formato +############)
+POST {{host}}/empresa/perfil/telefonos
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "telefono": "+50370009000"
+}
+
+
+### Intentar agregar Teléfono con Formato Inválido (Debe retornar 400 Bad Request)
+POST {{host}}/empresa/perfil/telefonos
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "telefono": "123456"
+}
+
+
+### Eliminar Teléfono Fijo
+DELETE {{host}}/empresa/perfil/telefonos/2255-8899
+Authorization: Bearer {{auth_token}}
+
+
+### Eliminar Teléfono Celular
+DELETE {{host}}/empresa/perfil/telefonos/+50370009000
+Authorization: Bearer {{auth_token}}
