@@ -210,4 +210,190 @@ public class CorreoService {
             // No lanzamos excepción para evitar que el cambio de estado de la oferta falle por problemas de correo
         }
     }
+
+    public void enviarCorreoConfirmacionPostulacion(String destinatario, String tituloOferta, String nombreEmpresa) {
+        String htmlContent = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #333333;
+                        background-color: #f4f6f9;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background: #ffffff;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                    }
+                    .header {
+                        background-color: #1e293b;
+                        color: #ffffff;
+                        padding: 30px;
+                        text-align: center;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 24px;
+                        font-weight: 600;
+                    }
+                    .content {
+                        padding: 40px 30px;
+                    }
+                    .highlight {
+                        background-color: #eff6ff;
+                        border-left: 4px solid #2563eb;
+                        padding: 15px;
+                        margin: 20px 0;
+                        border-radius: 0 4px 4px 0;
+                    }
+                    .footer {
+                        background-color: #f8fafc;
+                        padding: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #64748b;
+                        border-top: 1px solid #e2e8f0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>JobHorizon</h1>
+                    </div>
+                    <div class="content">
+                        <h2>¡Postulación Recibida!</h2>
+                        <p>Te confirmamos que te has postulado con éxito a la siguiente vacante:</p>
+                        <div class="highlight">
+                            <strong>Puesto:</strong> %s<br/>
+                            <strong>Empresa:</strong> %s
+                        </div>
+                        <p>La empresa revisará tu perfil y se pondrá en contacto contigo si cumples con los requerimientos del puesto. Podrás dar seguimiento al estado de tu postulación desde tu cuenta en JobHorizon.</p>
+                        <p>¡Mucho éxito en tu proceso de selección!</p>
+                        <p>Atentamente,<br/>El equipo de JobHorizon</p>
+                    </div>
+                    <div class="footer">
+                        &copy; 2026 JobHorizon. Todos los derechos reservados.
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.formatted(tituloOferta, nombreEmpresa);
+
+        CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(resendProperties.fromEmail())
+                .to(destinatario)
+                .subject("Confirmación de postulación: " + tituloOferta + " - JobHorizon")
+                .html(htmlContent)
+                .build();
+
+        try {
+            log.info("Enviando correo de confirmación de postulación a {}", destinatario);
+            resend.emails().send(params);
+            log.info("Correo de confirmación de postulación enviado con éxito a {}", destinatario);
+        } catch (ResendException e) {
+            log.error("Error al enviar el correo de confirmación de postulación a {}: {}", destinatario, e.getMessage(), e);
+        }
+    }
+
+    public void enviarCorreoCambioEstadoPostulacion(String destinatario, String tituloOferta, String nombreEmpresa, String nuevoEstado) {
+        String htmlContent = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #333333;
+                        background-color: #f4f6f9;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background: #ffffff;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                    }
+                    .header {
+                        background-color: #1e293b;
+                        color: #ffffff;
+                        padding: 30px;
+                        text-align: center;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 24px;
+                        font-weight: 600;
+                    }
+                    .content {
+                        padding: 40px 30px;
+                    }
+                    .highlight {
+                        background-color: #f0fdf4;
+                        border-left: 4px solid #16a34a;
+                        padding: 15px;
+                        margin: 20px 0;
+                        border-radius: 0 4px 4px 0;
+                    }
+                    .footer {
+                        background-color: #f8fafc;
+                        padding: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #64748b;
+                        border-top: 1px solid #e2e8f0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>JobHorizon</h1>
+                    </div>
+                    <div class="content">
+                        <h2>Actualización de tu Postulación</h2>
+                        <p>Tu postulación para la vacante de <strong>%s</strong> en <strong>%s</strong> ha cambiado de estado:</p>
+                        <div class="highlight">
+                            <strong>Nuevo Estado:</strong> %s
+                        </div>
+                        <p>Ingresa a tu cuenta de JobHorizon para ver más detalles sobre este proceso o estar al tanto de posibles mensajes de la empresa.</p>
+                        <p>Atentamente,<br/>El equipo de JobHorizon</p>
+                    </div>
+                    <div class="footer">
+                        &copy; 2026 JobHorizon. Todos los derechos reservados.
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.formatted(tituloOferta, nombreEmpresa, nuevoEstado);
+
+        CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(resendProperties.fromEmail())
+                .to(destinatario)
+                .subject("Actualización de tu postulación: " + tituloOferta + " - JobHorizon")
+                .html(htmlContent)
+                .build();
+
+        try {
+            log.info("Enviando correo de actualización de postulación a {}", destinatario);
+            resend.emails().send(params);
+            log.info("Correo de actualización de postulación enviado con éxito a {}", destinatario);
+        } catch (ResendException e) {
+            log.error("Error al enviar el correo de actualización de postulación a {}: {}", destinatario, e.getMessage(), e);
+        }
+    }
 }
