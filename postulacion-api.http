@@ -1,0 +1,90 @@
+### Peticiones de Prueba para el Sistema de Postulaciones
+### Diseñado para el HTTP Client integrado de JetBrains (IntelliJ IDEA) o VS Code REST Client
+
+### ==========================================
+### 1. Autenticación (Captura de Tokens)
+### ==========================================
+
+### 1.1. Login como Postulante
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "postulante.test@jobhorizon.com",
+  "password": "SecurePassword123!"
+}
+
+> {%
+  if (response.status === 200 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token_postulante", response.body.data.token);
+      client.log("Token del Postulante capturado con éxito.");
+  }
+%}
+
+### 1.2. Login como Empresa
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "empresa.test@jobhorizon.com",
+  "password": "SecurePassword123!"
+}
+
+> {%
+  if (response.status === 200 && response.body.data && response.body.data.token) {
+      client.global.set("auth_token_empresa", response.body.data.token);
+      client.log("Token de la Empresa capturado con éxito.");
+  }
+%}
+
+
+### ==========================================
+### 2. Acciones del Postulante (Candidato)
+### ==========================================
+
+### 2.1. Aplicar a una Oferta de Trabajo (Reemplazar idOferta con ID existente, ej. 1)
+# Requiere que la oferta esté activa en la DB y el postulante no haya aplicado antes.
+# Tras la aplicación exitosa, se enviará un correo de confirmación de postulación.
+POST {{host}}/postulaciones/ofertas/1
+Authorization: Bearer {{auth_token_postulante}}
+
+### 2.2. Intentar duplicar la postulación (Debe retornar 400 Bad Request)
+POST {{host}}/postulaciones/ofertas/1
+Authorization: Bearer {{auth_token_postulante}}
+
+### 2.3. Ver mi historial de postulaciones (Candidato)
+# Retorna la lista de postulaciones paginada y ordenada por fecha descendente.
+GET {{host}}/postulaciones/mi-historial?page=0&size=10
+Authorization: Bearer {{auth_token_postulante}}
+
+
+### ==========================================
+### 3. Acciones de la Empresa
+### ==========================================
+
+### 3.1. Ver aspirantes de una oferta (Reemplazar idOferta con la oferta correspondiente, ej. 1)
+# La empresa autenticada debe ser dueña de la oferta. Retorna los aspirantes paginados.
+GET {{host}}/postulaciones/ofertas/1/aspirantes?page=0&size=10
+Authorization: Bearer {{auth_token_empresa}}
+
+### 3.2. Cambiar estado de una postulación
+# Modifica el estado del postulante para esa oferta (ej. de PENDIENTE a CONTACTADO/REVISADA).
+# EstadoAplicacion IDs seeded: 1=PENDIENTE, 2=REVISADA, 3=CONTACTADO, 4=RECHAZADO
+# Tras la actualización exitosa, se enviará un correo de notificación de cambio de estado.
+PATCH {{host}}/postulaciones/ofertas/1/aspirantes/1/estado
+Authorization: Bearer {{auth_token_empresa}}
+Content-Type: application/json
+
+{
+  "idEstadoAplicacion": 2
+}
+
+### 3.3. Intentar cambiar estado de postulación ajena (Debe retornar 403 Forbidden o 404 Not Found)
+# Modificación con una empresa que no es dueña del puesto o ID inválido
+PATCH {{host}}/postulaciones/ofertas/999/aspirantes/1/estado
+Authorization: Bearer {{auth_token_empresa}}
+Content-Type: application/json
+
+{
+  "idEstadoAplicacion": 3
+}
