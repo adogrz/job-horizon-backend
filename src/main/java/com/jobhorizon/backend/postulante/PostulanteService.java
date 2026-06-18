@@ -1,23 +1,17 @@
 package com.jobhorizon.backend.postulante;
 
+import com.jobhorizon.backend.catalogo.CatalogoService;
 import com.jobhorizon.backend.departamento.Departamento;
-import com.jobhorizon.backend.departamento.DepartamentoRepository;
 import com.jobhorizon.backend.distrito.Distrito;
 import com.jobhorizon.backend.distrito.DistritoRepository;
 import com.jobhorizon.backend.genero.Genero;
-import com.jobhorizon.backend.genero.GeneroRepository;
 import com.jobhorizon.backend.habilidad.Habilidad;
 import com.jobhorizon.backend.habilidad.HabilidadRepository;
 import com.jobhorizon.backend.idioma.Idioma;
-import com.jobhorizon.backend.idioma.IdiomaRepository;
 import com.jobhorizon.backend.niveleducativo.NivelEducativo;
-import com.jobhorizon.backend.niveleducativo.NivelEducativoRepository;
 import com.jobhorizon.backend.nivelhabilidad.NivelHabilidad;
-import com.jobhorizon.backend.nivelhabilidad.NivelHabilidadRepository;
 import com.jobhorizon.backend.nivelidioma.NivelIdioma;
-import com.jobhorizon.backend.nivelidioma.NivelIdiomaRepository;
 import com.jobhorizon.backend.pais.Pais;
-import com.jobhorizon.backend.pais.PaisRepository;
 import com.jobhorizon.backend.postulante.certificacion.Certificacion;
 import com.jobhorizon.backend.postulante.certificacion.CertificacionId;
 import com.jobhorizon.backend.postulante.certificacion.CertificacionRepository;
@@ -84,15 +78,10 @@ import com.jobhorizon.backend.seguridad.exception.RecursoNoEncontradoException;
 import com.jobhorizon.backend.seguridad.usuario.Usuario;
 import com.jobhorizon.backend.seguridad.usuario.UsuarioRepository;
 import com.jobhorizon.backend.tipocertificacion.TipoCertificacion;
-import com.jobhorizon.backend.tipocertificacion.TipoCertificacionRepository;
 import com.jobhorizon.backend.tipodocumento.TipoDocumento;
-import com.jobhorizon.backend.tipodocumento.TipoDocumentoRepository;
 import com.jobhorizon.backend.tipoparticipacion.TipoParticipacion;
-import com.jobhorizon.backend.tipoparticipacion.TipoParticipacionRepository;
 import com.jobhorizon.backend.tiporecomendacion.TipoRecomendacion;
-import com.jobhorizon.backend.tiporecomendacion.TipoRecomendacionRepository;
 import com.jobhorizon.backend.tiporedsocial.TipoRedSocial;
-import com.jobhorizon.backend.tiporedsocial.TipoRedSocialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,20 +109,9 @@ public class PostulanteService {
     private final PostulanteIdiomaRepository idiomaRepository;
 
     // Repositorios de catálogos
-    private final GeneroRepository generoRepository;
-    private final TipoDocumentoRepository tipoDocumentoRepository;
     private final DistritoRepository distritoRepository;
-    private final DepartamentoRepository departamentoRepository;
-    private final TipoRedSocialRepository tipoRedSocialRepository;
-    private final NivelEducativoRepository nivelEducativoRepository;
-    private final TipoCertificacionRepository tipoCertificacionRepository;
-    private final TipoRecomendacionRepository tipoRecomendacionRepository;
-    private final TipoParticipacionRepository tipoParticipacionRepository;
-    private final PaisRepository paisRepository;
     private final HabilidadRepository rawHabilidadRepository;
-    private final NivelHabilidadRepository nivelHabilidadRepository;
-    private final IdiomaRepository rawIdiomaRepository;
-    private final NivelIdiomaRepository nivelIdiomaRepository;
+    private final CatalogoService catalogoService;
 
     private Postulante buscarPostulante(Integer idUsuario) {
         return postulanteRepository.findById(idUsuario)
@@ -158,9 +136,9 @@ public class PostulanteService {
     public DatosPersonalesResponse actualizarDatosPersonales(Integer idUsuario, ActualizarDatosPersonalesRequest request) {
         Postulante p = buscarPostulante(idUsuario);
 
-        Genero g = generoRepository.findById(request.getIdGenero())
+        Genero g = catalogoService.findById(Genero.class, request.getIdGenero())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Género no encontrado con ID: " + request.getIdGenero()));
-        TipoDocumento td = tipoDocumentoRepository.findById(request.getIdTipoDocumento())
+        TipoDocumento td = catalogoService.findById(TipoDocumento.class, request.getIdTipoDocumento())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de documento no encontrado con ID: " + request.getIdTipoDocumento()));
         Distrito d = distritoRepository.findById(request.getIdDistrito())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Distrito no encontrado con ID: " + request.getIdDistrito()));
@@ -184,7 +162,7 @@ public class PostulanteService {
     private DatosPersonalesResponse mapearADatosPersonalesResponse(Postulante p) {
         String deptoNombre = null;
         if (p.getDistrito() != null && p.getDistrito().getIdDepartamento() != null) {
-            deptoNombre = departamentoRepository.findById(p.getDistrito().getIdDepartamento())
+            deptoNombre = catalogoService.findById(Departamento.class, p.getDistrito().getIdDepartamento())
                     .map(Departamento::getNombre)
                     .orElse(null);
         }
@@ -261,7 +239,7 @@ public class PostulanteService {
     @Transactional
     public void agregarOActualizarRedSocial(Integer idUsuario, RedSocialRequest request) {
         buscarPostulante(idUsuario);
-        TipoRedSocial trs = tipoRedSocialRepository.findById(request.getIdTipoRedSocial())
+        TipoRedSocial trs = catalogoService.findById(TipoRedSocial.class, request.getIdTipoRedSocial())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de red social no encontrado con ID: " + request.getIdTipoRedSocial()));
 
         PostulanteRedSocialId id = new PostulanteRedSocialId(idUsuario, request.getIdTipoRedSocial());
@@ -374,7 +352,7 @@ public class PostulanteService {
     @Transactional
     public FormacionAcademicaResponse agregarFormacion(Integer idUsuario, FormacionAcademicaRequest request) {
         buscarPostulante(idUsuario);
-        NivelEducativo ne = nivelEducativoRepository.findById(request.getIdNivelEducativo())
+        NivelEducativo ne = catalogoService.findById(NivelEducativo.class, request.getIdNivelEducativo())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel educativo no encontrado con ID: " + request.getIdNivelEducativo()));
 
         int nextNum = formacionRepository.findByIdUsuario(idUsuario).stream()
@@ -400,7 +378,7 @@ public class PostulanteService {
     @Transactional
     public void actualizarFormacion(Integer idUsuario, Integer numFormacion, FormacionAcademicaRequest request) {
         buscarPostulante(idUsuario);
-        NivelEducativo ne = nivelEducativoRepository.findById(request.getIdNivelEducativo())
+        NivelEducativo ne = catalogoService.findById(NivelEducativo.class, request.getIdNivelEducativo())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel educativo no encontrado con ID: " + request.getIdNivelEducativo()));
 
         FormacionAcademicaId id = new FormacionAcademicaId(numFormacion, idUsuario);
@@ -452,7 +430,7 @@ public class PostulanteService {
     @Transactional
     public CertificacionResponse agregarCertificacion(Integer idUsuario, CertificacionRequest request) {
         buscarPostulante(idUsuario);
-        TipoCertificacion tc = tipoCertificacionRepository.findById(request.getIdTipoCertificacion())
+        TipoCertificacion tc = catalogoService.findById(TipoCertificacion.class, request.getIdTipoCertificacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de certificación no encontrado con ID: " + request.getIdTipoCertificacion()));
 
         int nextNum = certificacionRepository.findByIdUsuario(idUsuario).stream()
@@ -478,7 +456,7 @@ public class PostulanteService {
     @Transactional
     public void actualizarCertificacion(Integer idUsuario, Integer codCert, CertificacionRequest request) {
         buscarPostulante(idUsuario);
-        TipoCertificacion tc = tipoCertificacionRepository.findById(request.getIdTipoCertificacion())
+        TipoCertificacion tc = catalogoService.findById(TipoCertificacion.class, request.getIdTipoCertificacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de certificación no encontrado con ID: " + request.getIdTipoCertificacion()));
 
         CertificacionId id = new CertificacionId(codCert, idUsuario);
@@ -582,7 +560,7 @@ public class PostulanteService {
     @Transactional
     public RecomendacionResponse agregarRecomendacion(Integer idUsuario, RecomendacionRequest request) {
         buscarPostulante(idUsuario);
-        TipoRecomendacion tr = tipoRecomendacionRepository.findById(request.getIdTipoRecomendacion())
+        TipoRecomendacion tr = catalogoService.findById(TipoRecomendacion.class, request.getIdTipoRecomendacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de recomendación no encontrado con ID: " + request.getIdTipoRecomendacion()));
 
         int nextNum = recomendacionRepository.findByIdUsuario(idUsuario).stream()
@@ -605,7 +583,7 @@ public class PostulanteService {
     @Transactional
     public void actualizarRecomendacion(Integer idUsuario, Integer numRecomendacion, RecomendacionRequest request) {
         buscarPostulante(idUsuario);
-        TipoRecomendacion tr = tipoRecomendacionRepository.findById(request.getIdTipoRecomendacion())
+        TipoRecomendacion tr = catalogoService.findById(TipoRecomendacion.class, request.getIdTipoRecomendacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de recomendación no encontrado con ID: " + request.getIdTipoRecomendacion()));
 
         RecomendacionId id = new RecomendacionId(numRecomendacion, idUsuario);
@@ -651,9 +629,9 @@ public class PostulanteService {
     @Transactional
     public EventoResponse agregarEvento(Integer idUsuario, EventoRequest request) {
         buscarPostulante(idUsuario);
-        TipoParticipacion tp = tipoParticipacionRepository.findById(request.getIdTipoParticipacion())
+        TipoParticipacion tp = catalogoService.findById(TipoParticipacion.class, request.getIdTipoParticipacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de participación no encontrado con ID: " + request.getIdTipoParticipacion()));
-        Pais pais = paisRepository.findById(request.getIdPais())
+        Pais pais = catalogoService.findById(Pais.class, request.getIdPais())
                 .orElseThrow(() -> new RecursoNoEncontradoException("País no encontrado con ID: " + request.getIdPais()));
 
         int nextNum = eventoRepository.findByIdUsuario(idUsuario).stream()
@@ -679,9 +657,9 @@ public class PostulanteService {
     @Transactional
     public void actualizarEvento(Integer idUsuario, Integer numEvento, EventoRequest request) {
         buscarPostulante(idUsuario);
-        TipoParticipacion tp = tipoParticipacionRepository.findById(request.getIdTipoParticipacion())
+        TipoParticipacion tp = catalogoService.findById(TipoParticipacion.class, request.getIdTipoParticipacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de participación no encontrado con ID: " + request.getIdTipoParticipacion()));
-        Pais pais = paisRepository.findById(request.getIdPais())
+        Pais pais = catalogoService.findById(Pais.class, request.getIdPais())
                 .orElseThrow(() -> new RecursoNoEncontradoException("País no encontrado con ID: " + request.getIdPais()));
 
         EventoId id = new EventoId(numEvento, idUsuario);
@@ -871,7 +849,7 @@ public class PostulanteService {
         buscarPostulante(idUsuario);
         Habilidad h = rawHabilidadRepository.findById(request.getIdHabilidad())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Habilidad no encontrada con ID: " + request.getIdHabilidad()));
-        NivelHabilidad nh = nivelHabilidadRepository.findById(request.getIdNivelHabilidad())
+        NivelHabilidad nh = catalogoService.findById(NivelHabilidad.class, request.getIdNivelHabilidad())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel de habilidad no encontrado con ID: " + request.getIdNivelHabilidad()));
 
         PostulanteHabilidadId id = new PostulanteHabilidadId(idUsuario, request.getIdHabilidad());
@@ -915,15 +893,15 @@ public class PostulanteService {
     @Transactional
     public void agregarOActualizarIdioma(Integer idUsuario, PostulanteIdiomaRequest request) {
         buscarPostulante(idUsuario);
-        Idioma i = rawIdiomaRepository.findById(request.getIdIdioma())
+        Idioma i = catalogoService.findById(Idioma.class, request.getIdIdioma())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Idioma no encontrado con ID: " + request.getIdIdioma()));
-        NivelIdioma nl = nivelIdiomaRepository.findById(request.getIdNivelLectura())
+        NivelIdioma nl = catalogoService.findById(NivelIdioma.class, request.getIdNivelLectura())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel de lectura no encontrado con ID: " + request.getIdNivelLectura()));
-        NivelIdioma ne = nivelIdiomaRepository.findById(request.getIdNivelEscritura())
+        NivelIdioma ne = catalogoService.findById(NivelIdioma.class, request.getIdNivelEscritura())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel de escritura no encontrado con ID: " + request.getIdNivelEscritura()));
-        NivelIdioma nc = nivelIdiomaRepository.findById(request.getIdNivelConversacion())
+        NivelIdioma nc = catalogoService.findById(NivelIdioma.class, request.getIdNivelConversacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel de conversación no encontrado con ID: " + request.getIdNivelConversacion()));
-        NivelIdioma nes = nivelIdiomaRepository.findById(request.getIdNivelEscucha())
+        NivelIdioma nes = catalogoService.findById(NivelIdioma.class, request.getIdNivelEscucha())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel de escucha no encontrado con ID: " + request.getIdNivelEscucha()));
 
         PostulanteIdiomaId id = new PostulanteIdiomaId(idUsuario, request.getIdIdioma());

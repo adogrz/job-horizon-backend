@@ -1,28 +1,21 @@
 package com.jobhorizon.backend.ofertatrabajo;
 
 import com.jobhorizon.backend.correo.CorreoService;
+import com.jobhorizon.backend.catalogo.CatalogoService;
 import com.jobhorizon.backend.departamento.Departamento;
-import com.jobhorizon.backend.departamento.DepartamentoRepository;
 import com.jobhorizon.backend.distrito.Distrito;
 import com.jobhorizon.backend.distrito.DistritoRepository;
 import com.jobhorizon.backend.empresa.Empresa;
 import com.jobhorizon.backend.empresa.EmpresaRepository;
 import com.jobhorizon.backend.estadooferta.EstadoOferta;
-import com.jobhorizon.backend.estadooferta.EstadoOfertaRepository;
 import com.jobhorizon.backend.habilidad.Habilidad;
 import com.jobhorizon.backend.habilidad.HabilidadRepository;
 import com.jobhorizon.backend.modalidad.Modalidad;
-import com.jobhorizon.backend.modalidad.ModalidadRepository;
 import com.jobhorizon.backend.niveleducativo.NivelEducativo;
-import com.jobhorizon.backend.niveleducativo.NivelEducativoRepository;
 import com.jobhorizon.backend.nivelhabilidad.NivelHabilidad;
-import com.jobhorizon.backend.nivelhabilidad.NivelHabilidadRepository;
 import com.jobhorizon.backend.nivelidioma.NivelIdioma;
-import com.jobhorizon.backend.nivelidioma.NivelIdiomaRepository;
 import com.jobhorizon.backend.idioma.Idioma;
-import com.jobhorizon.backend.idioma.IdiomaRepository;
 import com.jobhorizon.backend.tipocontrato.TipoContrato;
-import com.jobhorizon.backend.tipocontrato.TipoContratoRepository;
 import com.jobhorizon.backend.ofertatrabajo.dto.*;
 import com.jobhorizon.backend.seguridad.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
@@ -50,18 +43,11 @@ public class OfertaTrabajoService {
 
     private final OfertaTrabajoRepository ofertaTrabajoRepository;
     private final EmpresaRepository empresaRepository;
-    private final TipoContratoRepository tipoContratoRepository;
-    private final NivelEducativoRepository nivelEducativoRepository;
-    private final ModalidadRepository modalidadRepository;
-    private final EstadoOfertaRepository estadoOfertaRepository;
     private final DistritoRepository distritoRepository;
-    private final DepartamentoRepository departamentoRepository;
     private final HabilidadRepository habilidadRepository;
-    private final NivelHabilidadRepository nivelHabilidadRepository;
-    private final IdiomaRepository idiomaRepository;
-    private final NivelIdiomaRepository nivelIdiomaRepository;
     private final PostulanteOfertaRepository postulanteOfertaRepository;
     private final CorreoService correoService;
+    private final CatalogoService catalogoService;
 
     @Transactional
     public OfertaTrabajoResponse crearOferta(OfertaTrabajoRequest request, Integer idEmpresa) {
@@ -70,16 +56,16 @@ public class OfertaTrabajoService {
 
         validarDatosOferta(request);
 
-        EstadoOferta estadoActiva = estadoOfertaRepository.findByNombre("ACTIVA")
+        EstadoOferta estadoActiva = catalogoService.findByNombre(EstadoOferta.class, "ACTIVA")
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estado de oferta ACTIVA no configurado"));
 
-        TipoContrato tipoContrato = tipoContratoRepository.findById(request.getIdTipoContrato())
+        TipoContrato tipoContrato = catalogoService.findById(TipoContrato.class, request.getIdTipoContrato())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de contrato no encontrado"));
 
-        NivelEducativo nivelEducativo = nivelEducativoRepository.findById(request.getIdNivelEducativo())
+        NivelEducativo nivelEducativo = catalogoService.findById(NivelEducativo.class, request.getIdNivelEducativo())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel educativo no encontrado"));
 
-        Modalidad modalidad = modalidadRepository.findById(request.getIdModalidad())
+        Modalidad modalidad = catalogoService.findById(Modalidad.class, request.getIdModalidad())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Modalidad de trabajo no encontrada"));
 
         Distrito distrito = distritoRepository.findById(request.getIdDistrito())
@@ -124,13 +110,13 @@ public class OfertaTrabajoService {
 
         validarDatosOferta(request);
 
-        TipoContrato tipoContrato = tipoContratoRepository.findById(request.getIdTipoContrato())
+        TipoContrato tipoContrato = catalogoService.findById(TipoContrato.class, request.getIdTipoContrato())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de contrato no encontrado"));
 
-        NivelEducativo nivelEducativo = nivelEducativoRepository.findById(request.getIdNivelEducativo())
+        NivelEducativo nivelEducativo = catalogoService.findById(NivelEducativo.class, request.getIdNivelEducativo())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Nivel educativo no encontrado"));
 
-        Modalidad modalidad = modalidadRepository.findById(request.getIdModalidad())
+        Modalidad modalidad = catalogoService.findById(Modalidad.class, request.getIdModalidad())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Modalidad de trabajo no encontrada"));
 
         Distrito distrito = distritoRepository.findById(request.getIdDistrito())
@@ -170,7 +156,7 @@ public class OfertaTrabajoService {
             throw new AccessDeniedException("No tiene permisos para modificar esta oferta");
         }
 
-        EstadoOferta estado = estadoOfertaRepository.findById(idEstado)
+        EstadoOferta estado = catalogoService.findById(EstadoOferta.class, idEstado)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estado de oferta no encontrado"));
 
         String estadoAnterior = oferta.getEstadoOferta().getNombre();
@@ -287,7 +273,7 @@ public class OfertaTrabajoService {
         String dptoNombre = "";
         Distrito distrito = oferta.getDistrito();
         if (distrito != null && distrito.getIdDepartamento() != null) {
-            dptoNombre = departamentoRepository.findById(distrito.getIdDepartamento())
+            dptoNombre = catalogoService.findById(Departamento.class, distrito.getIdDepartamento())
                     .map(Departamento::getNombre)
                     .orElse("");
         }
@@ -328,7 +314,7 @@ public class OfertaTrabajoService {
             for (OfertaHabilidadRequest habRequest : requests) {
                 Habilidad habilidad = habilidadRepository.findById(habRequest.getIdHabilidad())
                         .orElseThrow(() -> new RecursoNoEncontradoException("Habilidad no encontrada: " + habRequest.getIdHabilidad()));
-                NivelHabilidad nivelHabilidad = nivelHabilidadRepository.findById(habRequest.getIdNivelHabilidad())
+                NivelHabilidad nivelHabilidad = catalogoService.findById(NivelHabilidad.class, habRequest.getIdNivelHabilidad())
                         .orElseThrow(() -> new RecursoNoEncontradoException("Nivel de habilidad no encontrado: " + habRequest.getIdNivelHabilidad()));
 
                 OfertaHabilidadId id = OfertaHabilidadId.builder()
@@ -351,9 +337,9 @@ public class OfertaTrabajoService {
         Set<OfertaIdioma> idiomas = new HashSet<>();
         if (requests != null) {
             for (OfertaIdiomaRequest idRequest : requests) {
-                Idioma idioma = idiomaRepository.findById(idRequest.getIdIdioma())
+                Idioma idioma = catalogoService.findById(Idioma.class, idRequest.getIdIdioma())
                         .orElseThrow(() -> new RecursoNoEncontradoException("Idioma no encontrado: " + idRequest.getIdIdioma()));
-                NivelIdioma nivelIdioma = nivelIdiomaRepository.findById(idRequest.getIdNivelIdioma())
+                NivelIdioma nivelIdioma = catalogoService.findById(NivelIdioma.class, idRequest.getIdNivelIdioma())
                         .orElseThrow(() -> new RecursoNoEncontradoException("Nivel de idioma no encontrado: " + idRequest.getIdNivelIdioma()));
 
                 OfertaIdiomaId id = OfertaIdiomaId.builder()
