@@ -5,7 +5,7 @@
 ### 1. Autenticación y Registro (Públicos)
 ### ==========================================
 
-### Registro de Postulante Nuevo
+### Registro de Postulante Nuevo (Se registra en estado PENDIENTE_VERIFICACION)
 POST {{host}}/auth/registro/postulante
 Content-Type: application/json
 
@@ -22,15 +22,16 @@ Content-Type: application/json
   "idDistrito": 1
 }
 
-> {%
-  // Si el registro inicia sesión automáticamente y retorna token, lo guardamos
-  if (response.status === 201 && response.body.data && response.body.data.token) {
-      client.global.set("auth_token", response.body.data.token);
-      client.log("Token capturado desde registro con éxito.");
-  }
-%}
+### Verificar Correo Electrónico
+### NOTA: Copia el token enviado a tu correo o búscalo directamente en la tabla TokenVerificacion de la base de datos.
+POST {{host}}/auth/verificar-correo
+Content-Type: application/json
 
-### Login de Usuario (Captura Automática de Token)
+{
+  "token": "PON_EL_TOKEN_AQUI"
+}
+
+### Login de Usuario (Captura Automática de Token - Solo funciona tras la verificación)
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -272,4 +273,45 @@ Content-Type: application/json
 
 ### Eliminar Idioma (ID Idioma: 1)
 DELETE {{host}}/postulante/perfil/idiomas/1
+Authorization: Bearer {{auth_token}}
+
+
+### ==========================================
+### 5. Almacenamiento y Archivos (R2 / Protegidos)
+### ==========================================
+
+### Obtener URL Pre-firmada para subir Foto de Perfil
+GET {{host}}/api/storage/presigned-url?tipo=FOTO_PERFIL&extension=png&contentType=image/png
+Authorization: Bearer {{auth_token}}
+
+### Obtener URL Pre-firmada para subir CV
+GET {{host}}/api/storage/presigned-url?tipo=CV&extension=pdf&contentType=application/pdf
+Authorization: Bearer {{auth_token}}
+
+### Actualizar Foto de Perfil (Asociar la URL pública generada de R2)
+PATCH {{host}}/postulante/perfil/foto
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "fotoUrl": "https://pub-xxxxxx.r2.dev/postulantes/foto_perfil.png"
+}
+
+### Actualizar CV (Asociar la URL pública generada de R2)
+PATCH {{host}}/postulante/perfil/cv
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "cvUrl": "https://pub-xxxxxx.r2.dev/postulantes/cv.pdf"
+}
+
+
+### ==========================================
+### 6. REVERSIÓN / LIMPIEZA DE DATOS (Protegidos)
+### ==========================================
+
+### Eliminar Cuenta Completa de Prueba
+### NOTA: Esto eliminará en cascada al postulante, sus teléfonos, habilidades, etc., y físicamente borrará sus archivos de R2.
+DELETE {{host}}/postulante/perfil
 Authorization: Bearer {{auth_token}}

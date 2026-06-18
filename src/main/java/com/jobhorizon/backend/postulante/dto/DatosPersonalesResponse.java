@@ -17,6 +17,7 @@ public record DatosPersonalesResponse(
     String nit,
     String direccion,
     String fotoUrl,
+    String cvUrl,
     Integer idGenero,
     String genero,
     Integer idTipoDocumento,

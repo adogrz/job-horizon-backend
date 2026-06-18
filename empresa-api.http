@@ -5,7 +5,7 @@
 ### 1. Autenticación y Registro (Públicos)
 ### ==========================================
 
-### Registro de Empresa Nueva
+### Registro de Empresa Nueva (Se registra en estado PENDIENTE_VERIFICACION)
 POST {{host}}/auth/registro/empresa
 Content-Type: application/json
 
@@ -20,15 +20,16 @@ Content-Type: application/json
   "idDistrito": 1
 }
 
-> {%
-  // Si el registro inicia sesión automáticamente y retorna token, lo guardamos
-  if (response.status === 201 && response.body.data && response.body.data.token) {
-      client.global.set("auth_token", response.body.data.token);
-      client.log("Token de empresa capturado desde registro con éxito.");
-  }
-%}
+### Verificar Correo Electrónico
+### NOTA: Copia el token enviado a tu correo o búscalo directamente en la tabla TokenVerificacion de la base de datos.
+POST {{host}}/auth/verificar-correo
+Content-Type: application/json
 
-### Login de Empresa (Captura Automática de Token)
+{
+  "token": "PON_EL_TOKEN_AQUI"
+}
+
+### Login de Empresa (Captura Automática de Token - Solo funciona tras la verificación)
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -111,4 +112,32 @@ Authorization: Bearer {{auth_token}}
 
 ### Eliminar Teléfono Celular
 DELETE {{host}}/empresa/perfil/telefonos/+50370009000
+Authorization: Bearer {{auth_token}}
+
+
+### ==========================================
+### 4. Almacenamiento y Archivos (R2 / Protegidos)
+### ==========================================
+
+### Obtener URL Pre-firmada para subir Logo de Empresa
+GET {{host}}/api/storage/presigned-url?tipo=LOGO_EMPRESA&extension=png&contentType=image/png
+Authorization: Bearer {{auth_token}}
+
+### Actualizar Logo de Empresa (Asociar la URL pública generada de R2)
+PATCH {{host}}/empresa/perfil/logo
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "logoUrl": "https://pub-xxxxxx.r2.dev/empresas/logo.png"
+}
+
+
+### ==========================================
+### 5. REVERSIÓN / LIMPIEZA DE DATOS (Protegidos)
+### ==========================================
+
+### Eliminar Cuenta Completa de Empresa de Prueba
+### NOTA: Esto eliminará en cascada la empresa, sus teléfonos, etc., y físicamente borrará su logo de R2.
+DELETE {{host}}/empresa/perfil
 Authorization: Bearer {{auth_token}}

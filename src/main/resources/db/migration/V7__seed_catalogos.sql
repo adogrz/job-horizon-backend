@@ -11,7 +11,8 @@
 INSERT INTO EstadoUsuario (Nombre)
 VALUES ('ACTIVO'),
        ('INACTIVO'),
-       ('BLOQUEADO');
+       ('BLOQUEADO'),
+       ('PENDIENTE_VERIFICACION');
 
 -- ------------------------------------------------------------
 -- Estados de oferta de trabajo

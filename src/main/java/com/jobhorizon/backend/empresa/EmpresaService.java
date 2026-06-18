@@ -14,6 +14,7 @@ import com.jobhorizon.backend.seguridad.exception.CorreoDuplicadoException;
 import com.jobhorizon.backend.seguridad.exception.RecursoNoEncontradoException;
 import com.jobhorizon.backend.seguridad.usuario.Usuario;
 import com.jobhorizon.backend.seguridad.usuario.UsuarioRepository;
+import com.jobhorizon.backend.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class EmpresaService {
     private final EmpresaTelefonoRepository telefonoRepository;
     private final DistritoRepository distritoRepository;
     private final CatalogoService catalogoService;
+    private final StorageService storageService;
 
     private Empresa buscarEmpresa(Integer idUsuario) {
         return empresaRepository.findById(idUsuario)
@@ -69,11 +71,28 @@ public class EmpresaService {
         empresa.setNit(request.getNit());
         empresa.setSitioWeb(request.getSitioWeb());
         empresa.setDescripcion(request.getDescripcion());
+
+        // Sincronización de logo
+        if ((request.getLogoUrl() == null || request.getLogoUrl().isBlank()) && empresa.getLogoUrl() != null && !empresa.getLogoUrl().isBlank()) {
+            storageService.deleteFile(storageService.extraerObjectKey(empresa.getLogoUrl()));
+        }
         empresa.setLogoUrl(request.getLogoUrl());
+
         empresa.setDistrito(distrito);
 
         empresaRepository.save(empresa);
         return mapearAEmpresaPerfilResponse(empresa);
+    }
+
+    @Transactional
+    public void actualizarLogo(Integer idUsuario, String logoUrl) {
+        Empresa empresa = buscarEmpresa(idUsuario);
+        String oldLogoUrl = empresa.getLogoUrl();
+        if ((logoUrl == null || logoUrl.isBlank()) && oldLogoUrl != null && !oldLogoUrl.isBlank()) {
+            storageService.deleteFile(storageService.extraerObjectKey(oldLogoUrl));
+        }
+        empresa.setLogoUrl(logoUrl);
+        empresaRepository.save(empresa);
     }
 
     @Transactional(readOnly = true)
@@ -136,5 +155,21 @@ public class EmpresaService {
                 deptoNombre,
                 telefonos
         );
+    }
+
+    @Transactional
+    public void eliminarPerfilYUsuario(Integer idUsuario) {
+        Empresa empresa = buscarEmpresa(idUsuario);
+        
+        // 1. Eliminar logo de R2
+        if (empresa.getLogoUrl() != null && !empresa.getLogoUrl().isBlank()) {
+            String logoKey = storageService.extraerObjectKey(empresa.getLogoUrl());
+            storageService.deleteFile(logoKey);
+        }
+
+        // 2. Eliminar el usuario (cascada elimina la empresa y sus teléfonos en BD)
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con ID: " + idUsuario));
+        usuarioRepository.delete(usuario);
     }
 }

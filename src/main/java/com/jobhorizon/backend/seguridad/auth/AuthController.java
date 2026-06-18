@@ -58,7 +58,7 @@ public class AuthController {
     public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<LoginResponse>> registrarPostulante(@Valid @RequestBody RegistroPostulanteRequest request) {
         LoginResponse response = authService.registrarPostulante(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new com.jobhorizon.backend.config.ApiResponse<>(true, "Registro de postulante exitoso", response));
+                .body(new com.jobhorizon.backend.config.ApiResponse<>(true, "Registro de postulante exitoso. Por favor, verifique su correo electrónico para activar su cuenta.", response));
     }
 
     @Operation(
@@ -74,7 +74,7 @@ public class AuthController {
     public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<LoginResponse>> registrarEmpresa(@Valid @RequestBody RegistroEmpresaRequest request) {
         LoginResponse response = authService.registrarEmpresa(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new com.jobhorizon.backend.config.ApiResponse<>(true, "Registro de empresa exitoso", response));
+                .body(new com.jobhorizon.backend.config.ApiResponse<>(true, "Registro de empresa exitoso. Por favor, verifique su correo electrónico para activar su cuenta.", response));
     }
 
     @Operation(
@@ -104,5 +104,19 @@ public class AuthController {
     public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<Void>> desbloquear(@Valid @RequestBody DesbloqueoRequest request) {
         authService.desbloquear(request);
         return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Cuenta desbloqueada exitosamente"));
+    }
+
+    @Operation(
+            summary = "Verificar cuenta por correo",
+            description = "Activa una cuenta de usuario que fue registrada en estado pendiente usando el token de verificación recibido por correo electrónico."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cuenta verificada y activada exitosamente."),
+            @ApiResponse(responseCode = "400", description = "El token es inválido o ha expirado.", content = @Content(schema = @Schema(implementation = com.jobhorizon.backend.config.ApiResponse.class)))
+    })
+    @PostMapping("/verificar-correo")
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<Void>> verificarCorreo(@Valid @RequestBody VerificacionRequest request) {
+        authService.verificarCorreo(request.token());
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Cuenta verificada y activada exitosamente"));
     }
 }
