@@ -50,6 +50,9 @@ public class Postulante {
     @Column(name = "FotoUrl", length = 500)
     private String fotoUrl;
 
+    @Column(name = "CvUrl", length = 500)
+    private String cvUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "IdGenero", nullable = false)
     private Genero genero;

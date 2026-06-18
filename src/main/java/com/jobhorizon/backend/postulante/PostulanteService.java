@@ -82,6 +82,7 @@ import com.jobhorizon.backend.tipodocumento.TipoDocumento;
 import com.jobhorizon.backend.tipoparticipacion.TipoParticipacion;
 import com.jobhorizon.backend.tiporecomendacion.TipoRecomendacion;
 import com.jobhorizon.backend.tiporedsocial.TipoRedSocial;
+import com.jobhorizon.backend.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,6 +113,7 @@ public class PostulanteService {
     private final DistritoRepository distritoRepository;
     private final HabilidadRepository rawHabilidadRepository;
     private final CatalogoService catalogoService;
+    private final StorageService storageService;
 
     private Postulante buscarPostulante(Integer idUsuario) {
         return postulanteRepository.findById(idUsuario)
@@ -150,13 +152,47 @@ public class PostulanteService {
         p.setNup(request.getNup());
         p.setNit(request.getNit());
         p.setDireccion(request.getDireccion());
+
+        // Sincronización de foto
+        if ((request.getFotoUrl() == null || request.getFotoUrl().isBlank()) && p.getFotoUrl() != null && !p.getFotoUrl().isBlank()) {
+            storageService.deleteFile(storageService.extraerObjectKey(p.getFotoUrl()));
+        }
         p.setFotoUrl(request.getFotoUrl());
+
+        // Sincronización de CV
+        if ((request.getCvUrl() == null || request.getCvUrl().isBlank()) && p.getCvUrl() != null && !p.getCvUrl().isBlank()) {
+            storageService.deleteFile(storageService.extraerObjectKey(p.getCvUrl()));
+        }
+        p.setCvUrl(request.getCvUrl());
+
         p.setGenero(g);
         p.setTipoDocumento(td);
         p.setDistrito(d);
 
         postulanteRepository.save(p);
         return mapearADatosPersonalesResponse(p);
+    }
+
+    @Transactional
+    public void actualizarFoto(Integer idUsuario, String fotoUrl) {
+        Postulante p = buscarPostulante(idUsuario);
+        String oldFotoUrl = p.getFotoUrl();
+        if ((fotoUrl == null || fotoUrl.isBlank()) && oldFotoUrl != null && !oldFotoUrl.isBlank()) {
+            storageService.deleteFile(storageService.extraerObjectKey(oldFotoUrl));
+        }
+        p.setFotoUrl(fotoUrl);
+        postulanteRepository.save(p);
+    }
+
+    @Transactional
+    public void actualizarCv(Integer idUsuario, String cvUrl) {
+        Postulante p = buscarPostulante(idUsuario);
+        String oldCvUrl = p.getCvUrl();
+        if ((cvUrl == null || cvUrl.isBlank()) && oldCvUrl != null && !oldCvUrl.isBlank()) {
+            storageService.deleteFile(storageService.extraerObjectKey(oldCvUrl));
+        }
+        p.setCvUrl(cvUrl);
+        postulanteRepository.save(p);
     }
 
     private DatosPersonalesResponse mapearADatosPersonalesResponse(Postulante p) {
@@ -178,6 +214,7 @@ public class PostulanteService {
                 p.getNit(),
                 p.getDireccion(),
                 p.getFotoUrl(),
+                p.getCvUrl(),
                 p.getGenero() != null ? p.getGenero().getId() : null,
                 p.getGenero() != null ? p.getGenero().getNombre() : null,
                 p.getTipoDocumento() != null ? p.getTipoDocumento().getId() : null,
@@ -1016,5 +1053,26 @@ public class PostulanteService {
                 habilidades,
                 idiomas
         );
+    }
+
+    @Transactional
+    public void eliminarPerfilYUsuario(Integer idUsuario) {
+        Postulante postulante = postulanteRepository.findById(idUsuario)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Postulante no encontrado con ID: " + idUsuario));
+        
+        // 1. Eliminar archivos de R2
+        if (postulante.getFotoUrl() != null && !postulante.getFotoUrl().isBlank()) {
+            String fotoKey = storageService.extraerObjectKey(postulante.getFotoUrl());
+            storageService.deleteFile(fotoKey);
+        }
+        if (postulante.getCvUrl() != null && !postulante.getCvUrl().isBlank()) {
+            String cvKey = storageService.extraerObjectKey(postulante.getCvUrl());
+            storageService.deleteFile(cvKey);
+        }
+
+        // 2. Eliminar el usuario (cascada elimina el postulante y toda su info relacionada en BD)
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con ID: " + idUsuario));
+        usuarioRepository.delete(usuario);
     }
 }

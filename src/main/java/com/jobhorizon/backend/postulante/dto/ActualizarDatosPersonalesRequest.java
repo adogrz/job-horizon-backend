@@ -55,6 +55,10 @@ public class ActualizarDatosPersonalesRequest {
     @Size(max = 500, message = "La URL de la foto no puede exceder 500 caracteres")
     private String fotoUrl;
 
+    @Schema(description = "URL del CV en PDF (opcional, máx. 500 caracteres)", example = "https://storage.jobhorizon.com/cvs/juan.pdf")
+    @Size(max = 500, message = "La URL del CV no puede exceder 500 caracteres")
+    private String cvUrl;
+
     @Schema(description = "ID del género (obtener de /catalogos/generos)", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "El género es obligatorio")
     private Integer idGenero;

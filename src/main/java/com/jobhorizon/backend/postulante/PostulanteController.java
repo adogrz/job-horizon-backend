@@ -5,6 +5,8 @@ import com.jobhorizon.backend.postulante.certificacion.dto.CertificacionResponse
 import com.jobhorizon.backend.postulante.dto.ActualizarDatosPersonalesRequest;
 import com.jobhorizon.backend.postulante.dto.DatosPersonalesResponse;
 import com.jobhorizon.backend.postulante.dto.PostulantePerfilResponse;
+import com.jobhorizon.backend.postulante.dto.FotoRequest;
+import com.jobhorizon.backend.postulante.dto.CvRequest;
 import com.jobhorizon.backend.postulante.evento.dto.EventoRequest;
 import com.jobhorizon.backend.postulante.evento.dto.EventoResponse;
 import com.jobhorizon.backend.postulante.examen.dto.ExamenRequest;
@@ -131,6 +133,26 @@ public class PostulanteController {
         Integer idUsuario = postulanteService.obtenerIdUsuarioPorCorreo(principal.getName());
         DatosPersonalesResponse datos = postulanteService.actualizarDatosPersonales(idUsuario, request);
         return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Datos personales actualizados con éxito", datos));
+    }
+
+    @Operation(summary = "Actualizar foto de perfil", description = "Actualiza únicamente la URL de la foto de perfil del postulante. Si se envía null o cadena vacía, se elimina físicamente de R2.")
+    @PatchMapping("/foto")
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<Void>> actualizarFoto(
+            Principal principal,
+            @RequestBody FotoRequest request) {
+        Integer idUsuario = postulanteService.obtenerIdUsuarioPorCorreo(principal.getName());
+        postulanteService.actualizarFoto(idUsuario, request.fotoUrl());
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Foto de perfil actualizada con éxito"));
+    }
+
+    @Operation(summary = "Actualizar CV en PDF", description = "Actualiza únicamente la URL del CV en formato PDF del postulante. Si se envía null o cadena vacía, se elimina físicamente de R2.")
+    @PatchMapping("/cv")
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<Void>> actualizarCv(
+            Principal principal,
+            @RequestBody CvRequest request) {
+        Integer idUsuario = postulanteService.obtenerIdUsuarioPorCorreo(principal.getName());
+        postulanteService.actualizarCv(idUsuario, request.cvUrl());
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "CV actualizado con éxito"));
     }
 
     // =========================================================================
@@ -955,5 +977,18 @@ public class PostulanteController {
         Integer idUsuario = postulanteService.obtenerIdUsuarioPorCorreo(principal.getName());
         postulanteService.eliminarIdioma(idUsuario, idIdioma);
         return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Idioma eliminado con éxito"));
+    }
+
+    @Operation(summary = "Eliminar cuenta de postulante", description = "Elimina permanentemente el perfil del postulante y su usuario asociado, incluyendo sus archivos subidos a R2.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cuenta eliminada con éxito."),
+            @ApiResponse(responseCode = "401", description = "No autenticado.", content = @Content(schema = @Schema(implementation = com.jobhorizon.backend.config.ApiResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Sin privilegios.", content = @Content(schema = @Schema(implementation = com.jobhorizon.backend.config.ApiResponse.class)))
+    })
+    @DeleteMapping
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<Void>> eliminarCuenta(Principal principal) {
+        Integer idUsuario = postulanteService.obtenerIdUsuarioPorCorreo(principal.getName());
+        postulanteService.eliminarPerfilYUsuario(idUsuario);
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Cuenta de postulante eliminada con éxito"));
     }
 }

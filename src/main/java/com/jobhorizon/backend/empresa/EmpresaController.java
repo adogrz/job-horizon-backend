@@ -2,6 +2,7 @@ package com.jobhorizon.backend.empresa;
 
 import com.jobhorizon.backend.empresa.dto.EmpresaPerfilRequest;
 import com.jobhorizon.backend.empresa.dto.EmpresaPerfilResponse;
+import com.jobhorizon.backend.empresa.dto.LogoRequest;
 import com.jobhorizon.backend.empresa.telefono.dto.EmpresaTelefonoRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -75,6 +76,19 @@ public class EmpresaController {
     }
 
     @Operation(
+            summary = "Actualizar logo de la empresa",
+            description = "Actualiza únicamente la URL del logo de la empresa. Si se envía null o cadena vacía, se elimina físicamente de R2."
+    )
+    @PatchMapping("/logo")
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<Void>> actualizarLogo(
+            Principal principal,
+            @RequestBody LogoRequest request) {
+        Integer idUsuario = empresaService.obtenerIdUsuarioPorCorreo(principal.getName());
+        empresaService.actualizarLogo(idUsuario, request.logoUrl());
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Logo actualizado con éxito"));
+    }
+
+    @Operation(
             summary = "Agregar teléfono de la empresa",
             description = "Registra un nuevo número de teléfono para la empresa. Valida que el formato sea ####-#### o +############."
     )
@@ -111,5 +125,18 @@ public class EmpresaController {
         Integer idUsuario = empresaService.obtenerIdUsuarioPorCorreo(principal.getName());
         empresaService.eliminarTelefono(idUsuario, telefono);
         return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Teléfono eliminado con éxito"));
+    }
+
+    @Operation(summary = "Eliminar cuenta de la empresa", description = "Elimina permanentemente el perfil de la empresa y su usuario asociado, incluyendo su logo subido a R2.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cuenta de la empresa eliminada con éxito."),
+            @ApiResponse(responseCode = "401", description = "No autenticado.", content = @Content(schema = @Schema(implementation = com.jobhorizon.backend.config.ApiResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Sin privilegios.", content = @Content(schema = @Schema(implementation = com.jobhorizon.backend.config.ApiResponse.class)))
+    })
+    @DeleteMapping
+    public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<Void>> eliminarCuenta(Principal principal) {
+        Integer idUsuario = empresaService.obtenerIdUsuarioPorCorreo(principal.getName());
+        empresaService.eliminarPerfilYUsuario(idUsuario);
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Cuenta de la empresa eliminada con éxito"));
     }
 }
