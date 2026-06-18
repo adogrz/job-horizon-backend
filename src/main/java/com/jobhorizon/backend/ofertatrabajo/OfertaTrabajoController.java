@@ -4,6 +4,8 @@ import com.jobhorizon.backend.config.ApiResponse;
 import com.jobhorizon.backend.empresa.EmpresaService;
 import com.jobhorizon.backend.ofertatrabajo.dto.OfertaTrabajoRequest;
 import com.jobhorizon.backend.ofertatrabajo.dto.OfertaTrabajoResponse;
+import com.jobhorizon.backend.ofertatrabajo.matching.AspiranteMatchResponse;
+import com.jobhorizon.backend.ofertatrabajo.matching.MatchingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +32,7 @@ public class OfertaTrabajoController {
 
     private final OfertaTrabajoService ofertaTrabajoService;
     private final EmpresaService empresaService;
+    private final MatchingService matchingService;
 
     @Operation(summary = "Crear oferta de trabajo", description = "Permite a la empresa autenticada publicar una nueva oferta de trabajo vacante. Requiere GESTIONAR_PERFIL.")
     @ApiResponses({
@@ -120,5 +123,46 @@ public class OfertaTrabajoController {
                 salarioMin, aniosExperiencia, habilidades, idiomas, page, size
         );
         return ResponseEntity.ok(new ApiResponse<>(true, "Búsqueda de ofertas realizada con éxito", response));
+    }
+
+    @Operation(
+            summary = "Motor de matching de aspirantes para una oferta",
+            description = """
+                    Ejecuta el algoritmo de matching de la base de datos (sp_ObtenerAspirantes + fn_PuntajeMatching)
+                    para una oferta específica y devuelve los candidatos potenciales que aún NO han aplicado,
+                    ordenados por puntaje de matching (0–100). Requiere VER_ASPIRANTES y ser propietario de la oferta.
+
+                    **Filtros disponibles:**
+                    - `idDepartamento` — delimitado a la BD, filtro más eficiente.
+                    - `nombre` — búsqueda parcial (case-insensitive) sobre el nombre completo del aspirante.
+                    - `puntajeMin` — puntaje mínimo de matching (0.00–100.00).
+
+                    **Ordenamiento:** `sortBy` acepta `puntajeMatching` (default), `nombre`, `departamento`, `habilidades`.
+                    `sortDir` acepta `desc` (default) o `asc`.
+                    """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista de aspirantes con matching obtenida con éxito."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "No tiene permisos sobre esta oferta.", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Oferta no encontrada.", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @GetMapping("/{idOferta}/aspirantes-match")
+    @PreAuthorize("hasAuthority('VER_ASPIRANTES')")
+    public ResponseEntity<ApiResponse<Page<AspiranteMatchResponse>>> buscarAspirantesMatch(
+            @PathVariable Integer idOferta,
+            @Parameter(description = "ID del departamento para filtrar aspirantes (delegado al SP)") @RequestParam(required = false) Integer idDepartamento,
+            @Parameter(description = "Búsqueda parcial por nombre o apellido del aspirante") @RequestParam(required = false) String nombre,
+            @Parameter(description = "Puntaje mínimo de matching (0.00–100.00)") @RequestParam(required = false) BigDecimal puntajeMin,
+            @Parameter(description = "Campo de ordenamiento: puntajeMatching (default), nombre, departamento, habilidades") @RequestParam(defaultValue = "puntajeMatching") String sortBy,
+            @Parameter(description = "Dirección de ordenamiento: desc (default) o asc") @RequestParam(defaultValue = "desc") String sortDir,
+            @Parameter(description = "Número de página (0-indexed)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página (máximo 100)") @RequestParam(defaultValue = "10") int size,
+            Principal principal) {
+        Integer idEmpresa = empresaService.obtenerIdUsuarioPorCorreo(principal.getName());
+        Page<AspiranteMatchResponse> resultado = matchingService.buscarAspirantesParaOferta(
+                idOferta, idEmpresa, idDepartamento, nombre,
+                puntajeMin, sortBy, sortDir, page, size
+        );
+        return ResponseEntity.ok(new ApiResponse<>(true, "Motor de matching ejecutado con éxito", resultado));
     }
 }
