@@ -1,7 +1,7 @@
 package com.jobhorizon.backend.empresa;
 
+import com.jobhorizon.backend.catalogo.CatalogoService;
 import com.jobhorizon.backend.departamento.Departamento;
-import com.jobhorizon.backend.departamento.DepartamentoRepository;
 import com.jobhorizon.backend.distrito.Distrito;
 import com.jobhorizon.backend.distrito.DistritoRepository;
 import com.jobhorizon.backend.empresa.dto.EmpresaPerfilRequest;
@@ -29,7 +29,7 @@ public class EmpresaService {
     private final UsuarioRepository usuarioRepository;
     private final EmpresaTelefonoRepository telefonoRepository;
     private final DistritoRepository distritoRepository;
-    private final DepartamentoRepository departamentoRepository;
+    private final CatalogoService catalogoService;
 
     private Empresa buscarEmpresa(Integer idUsuario) {
         return empresaRepository.findById(idUsuario)
@@ -112,7 +112,7 @@ public class EmpresaService {
         Integer idDepto = null;
         if (e.getDistrito() != null && e.getDistrito().getIdDepartamento() != null) {
             idDepto = e.getDistrito().getIdDepartamento();
-            deptoNombre = departamentoRepository.findById(idDepto)
+            deptoNombre = catalogoService.findById(Departamento.class, idDepto)
                     .map(Departamento::getNombre)
                     .orElse(null);
         }

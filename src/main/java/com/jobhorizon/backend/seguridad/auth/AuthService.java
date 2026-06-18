@@ -1,12 +1,12 @@
 package com.jobhorizon.backend.seguridad.auth;
 
 import com.jobhorizon.backend.correo.CorreoService;
+import com.jobhorizon.backend.catalogo.CatalogoService;
 import com.jobhorizon.backend.distrito.Distrito;
 import com.jobhorizon.backend.distrito.DistritoRepository;
 import com.jobhorizon.backend.empresa.Empresa;
 import com.jobhorizon.backend.empresa.EmpresaRepository;
 import com.jobhorizon.backend.genero.Genero;
-import com.jobhorizon.backend.genero.GeneroRepository;
 import com.jobhorizon.backend.postulante.Postulante;
 import com.jobhorizon.backend.postulante.PostulanteRepository;
 import com.jobhorizon.backend.seguridad.auth.dto.*;
@@ -19,7 +19,6 @@ import com.jobhorizon.backend.seguridad.rol.RolRepository;
 import com.jobhorizon.backend.seguridad.usuario.Usuario;
 import com.jobhorizon.backend.seguridad.usuario.UsuarioRepository;
 import com.jobhorizon.backend.tipodocumento.TipoDocumento;
-import com.jobhorizon.backend.tipodocumento.TipoDocumentoRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +40,7 @@ public class AuthService {
     private final RolRepository rolRepository;
     private final PostulanteRepository postulanteRepository;
     private final EmpresaRepository empresaRepository;
-    private final GeneroRepository generoRepository;
-    private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final CatalogoService catalogoService;
     private final DistritoRepository distritoRepository;
 
     private final PasswordEncoder passwordEncoder;
@@ -114,10 +112,10 @@ public class AuthService {
         Rol rolPostulante = rolRepository.findByNombre("POSTULANTE")
                 .orElseThrow(() -> new RuntimeException("Rol POSTULANTE no encontrado"));
 
-        Genero genero = generoRepository.findById(request.getIdGenero())
+        Genero genero = catalogoService.findById(Genero.class, request.getIdGenero())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Género no encontrado"));
 
-        TipoDocumento tipoDoc = tipoDocumentoRepository.findById(request.getIdTipoDocumento())
+        TipoDocumento tipoDoc = catalogoService.findById(TipoDocumento.class, request.getIdTipoDocumento())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de documento no encontrado"));
 
         Distrito distrito = distritoRepository.findById(request.getIdDistrito())
