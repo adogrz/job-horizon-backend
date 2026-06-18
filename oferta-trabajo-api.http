@@ -138,11 +138,36 @@ Authorization: Bearer {{auth_token}}
 
 ### Listar Todas las Ofertas de una Empresa específica
 # Usar el ID de la Empresa (que es el ID de usuario de la empresa autenticada)
-GET {{host}}/ofertas/empresa/9
+GET {{host}}/ofertas/empresa/3
 
 
 ### ==========================================
-### 4. Búsqueda, Filtros y Paginación (Público)
+### 4. Motor de Matching de Aspirantes (Protegido - Empresa)
+### ==========================================
+
+### Obtener candidatos sugeridos para la oferta (ordenados por puntaje de matching por defecto)
+GET {{host}}/ofertas/{{oferta_id}}/aspirantes-match
+Authorization: Bearer {{auth_token}}
+
+### Filtrar candidatos por departamento (ej: ID de departamento)
+GET {{host}}/ofertas/{{oferta_id}}/aspirantes-match?idDepartamento=1
+Authorization: Bearer {{auth_token}}
+
+### Filtrar candidatos por nombre parcial
+GET {{host}}/ofertas/{{oferta_id}}/aspirantes-match?nombre=Juan
+Authorization: Bearer {{auth_token}}
+
+### Filtrar por puntaje de matching mínimo (0.00 - 100.00)
+GET {{host}}/ofertas/{{oferta_id}}/aspirantes-match?puntajeMin=70.00
+Authorization: Bearer {{auth_token}}
+
+### Ordenamiento personalizado (nombre, departamento, habilidades, puntajeMatching) y paginación
+GET {{host}}/ofertas/{{oferta_id}}/aspirantes-match?sortBy=nombre&sortDir=asc&page=0&size=10
+Authorization: Bearer {{auth_token}}
+
+
+### ==========================================
+### 5. Búsqueda, Filtros y Paginación (Público)
 ### ==========================================
 
 ### Búsqueda de todas las vacantes en estado ACTIVA (Paginado)
