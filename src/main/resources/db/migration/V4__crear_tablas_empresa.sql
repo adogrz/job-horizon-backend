@@ -30,6 +30,7 @@ CREATE TABLE EmpresaTelefono
             ON DELETE CASCADE,
     CONSTRAINT CK_EmpresaTelefono_Formato
         CHECK (Telefono LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]'
+            OR Telefono LIKE '+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
             OR Telefono LIKE '+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')
 );
 GO

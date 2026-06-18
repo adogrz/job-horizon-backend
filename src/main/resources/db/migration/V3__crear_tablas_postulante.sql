@@ -9,6 +9,7 @@ CREATE TABLE Postulante
     Nit             VARCHAR(20)  NULL,
     Direccion       VARCHAR(300) NOT NULL,
     FotoUrl         VARCHAR(500) NULL, -- ruta o URL de la foto
+    CvUrl           VARCHAR(500) NULL,
     IdGenero        INT          NOT NULL,
     IdTipoDocumento INT          NOT NULL,
     IdDistrito      INT          NOT NULL,
@@ -51,6 +52,7 @@ CREATE TABLE PostulanteTelefono
             ON DELETE CASCADE,
     CONSTRAINT CK_PostulanteTelefono_Formato
         CHECK (Telefono LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]'
+            OR Telefono LIKE '+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
             OR Telefono LIKE '+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')
 );
 GO
@@ -92,6 +94,7 @@ CREATE TABLE ExperienciaLaboral
     CONSTRAINT CK_ExperienciaLaboral_Telefono
         CHECK (TelefonoContacto IS NULL
             OR TelefonoContacto LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]'
+            OR TelefonoContacto LIKE '+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
             OR TelefonoContacto LIKE '+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
     CONSTRAINT CK_ExperienciaLaboral_Correo
         CHECK (CorreoContacto IS NULL
