@@ -5,7 +5,7 @@
 ### 1. Autenticación de la Empresa (Captura de Token)
 ### ==========================================
 
-### Registro de Empresa de Prueba (En caso de que no exista)
+### Registro de Empresa de Prueba (Se registra en estado PENDIENTE_VERIFICACION)
 POST {{host}}/auth/registro/empresa
 Content-Type: application/json
 
@@ -17,15 +17,17 @@ Content-Type: application/json
   "nit": "0614-150695-102-1",
   "sitioWeb": "https://www.tecnologiasfuturo.com",
   "descripcion": "Empresa dedicada al desarrollo de software.",
-  "idDistrito": 287
+  "idDistrito": 1
 }
 
-> {%
-  if (response.status === 201 && response.body.data && response.body.data.token) {
-      client.global.set("auth_token", response.body.data.token);
-      client.log("Token de empresa registrado y capturado con éxito.");
-  }
-%}
+### Verificar Correo Electrónico de la Empresa de Prueba
+### NOTA: Copia el token enviado a tu correo o búscalo directamente en la tabla TokenVerificacion.
+POST {{host}}/auth/verificar-correo
+Content-Type: application/json
+
+{
+  "token": "PON_EL_TOKEN_AQUI"
+}
 
 ### Login de Empresa (Captura automática del token de empresa)
 POST {{host}}/auth/login
@@ -157,3 +159,12 @@ GET {{host}}/ofertas?salarioMin=1400
 
 ### Búsqueda filtrada por habilidades específicas (Java = ID: 1)
 GET {{host}}/ofertas?habilidades=1
+
+
+### ==========================================
+### 5. REVERSIÓN / LIMPIEZA DE DATOS (Protegidos)
+### ==========================================
+
+### Eliminar Empresa de Prueba (Limpia en cascada la oferta de trabajo)
+DELETE {{host}}/empresa/perfil
+Authorization: Bearer {{auth_token}}
