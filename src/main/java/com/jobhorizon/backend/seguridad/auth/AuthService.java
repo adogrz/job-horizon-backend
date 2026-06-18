@@ -18,6 +18,8 @@ import com.jobhorizon.backend.seguridad.rol.Rol;
 import com.jobhorizon.backend.seguridad.rol.RolRepository;
 import com.jobhorizon.backend.seguridad.usuario.Usuario;
 import com.jobhorizon.backend.seguridad.usuario.UsuarioRepository;
+import com.jobhorizon.backend.seguridad.usuario.TokenVerificacion;
+import com.jobhorizon.backend.seguridad.usuario.TokenVerificacionRepository;
 import com.jobhorizon.backend.tipodocumento.TipoDocumento;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -46,6 +48,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final CorreoService correoService;
+    private final TokenVerificacionRepository tokenVerificacionRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -61,6 +64,9 @@ public class AuthService {
         }
         if ("INACTIVO".equals(estado)) {
             throw new CuentaInactivaException("La cuenta está inactiva.");
+        }
+        if ("PENDIENTE_VERIFICACION".equals(estado)) {
+            throw new CuentaInactivaException("La cuenta aún no ha sido verificada. Por favor, confirme su correo electrónico para activarla.");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), usuario.getPasswordHash())) {
@@ -106,8 +112,8 @@ public class AuthService {
             throw new CorreoDuplicadoException("El correo electrónico ya está registrado");
         }
 
-        EstadoUsuario estadoActivo = estadoUsuarioRepository.findByNombre("ACTIVO")
-                .orElseThrow(() -> new RuntimeException("Estado ACTIVO no encontrado"));
+        EstadoUsuario estadoPendiente = estadoUsuarioRepository.findByNombre("PENDIENTE_VERIFICACION")
+                .orElseThrow(() -> new RuntimeException("Estado PENDIENTE_VERIFICACION no encontrado"));
 
         Rol rolPostulante = rolRepository.findByNombre("POSTULANTE")
                 .orElseThrow(() -> new RuntimeException("Rol POSTULANTE no encontrado"));
@@ -125,7 +131,7 @@ public class AuthService {
                 .correo(request.getCorreo())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .intentosFallidos((byte) 0)
-                .estadoUsuario(estadoActivo)
+                .estadoUsuario(estadoPendiente)
                 .roles(Set.of(rolPostulante))
                 .build();
         usuario = usuarioRepository.save(usuario);
@@ -146,12 +152,13 @@ public class AuthService {
                 .build();
         postulanteRepository.save(postulante);
 
+        // Generar y enviar token de verificación
+        crearYEnviarTokenVerificacion(usuario);
+
         List<String> privilegios = usuarioRepository.obtenerNombresPrivilegios(usuario.getId());
         List<String> roles = List.of(rolPostulante.getNombre());
 
-        String token = jwtService.generarToken(usuario, privilegios, roles);
-
-        return new LoginResponse(token, usuario.getCorreo(), roles, privilegios);
+        return new LoginResponse(null, usuario.getCorreo(), roles, privilegios);
     }
 
     @Transactional
@@ -160,8 +167,8 @@ public class AuthService {
             throw new CorreoDuplicadoException("El correo electrónico ya está registrado");
         }
 
-        EstadoUsuario estadoActivo = estadoUsuarioRepository.findByNombre("ACTIVO")
-                .orElseThrow(() -> new RuntimeException("Estado ACTIVO no encontrado"));
+        EstadoUsuario estadoPendiente = estadoUsuarioRepository.findByNombre("PENDIENTE_VERIFICACION")
+                .orElseThrow(() -> new RuntimeException("Estado PENDIENTE_VERIFICACION no encontrado"));
 
         Rol rolEmpresa = rolRepository.findByNombre("EMPRESA")
                 .orElseThrow(() -> new RuntimeException("Rol EMPRESA no encontrado"));
@@ -173,7 +180,7 @@ public class AuthService {
                 .correo(request.getCorreo())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .intentosFallidos((byte) 0)
-                .estadoUsuario(estadoActivo)
+                .estadoUsuario(estadoPendiente)
                 .roles(Set.of(rolEmpresa))
                 .build();
         usuario = usuarioRepository.save(usuario);
@@ -190,12 +197,13 @@ public class AuthService {
                 .build();
         empresaRepository.save(empresa);
 
+        // Generar y enviar token de verificación
+        crearYEnviarTokenVerificacion(usuario);
+
         List<String> privilegios = usuarioRepository.obtenerNombresPrivilegios(usuario.getId());
         List<String> roles = List.of(rolEmpresa.getNombre());
 
-        String token = jwtService.generarToken(usuario, privilegios, roles);
-
-        return new LoginResponse(token, usuario.getCorreo(), roles, privilegios);
+        return new LoginResponse(null, usuario.getCorreo(), roles, privilegios);
     }
 
     @Transactional
@@ -227,5 +235,35 @@ public class AuthService {
             default:
                 throw new RuntimeException("Error inesperado al desbloquear el usuario");
         }
+    }
+
+    @Transactional
+    public void verificarCorreo(String token) {
+        TokenVerificacion tokenVerif = tokenVerificacionRepository.findByToken(token)
+                .orElseThrow(() -> new TokenInvalidoException("Token de verificación inválido o no encontrado"));
+
+        if (tokenVerif.getFechaExpiracion().isBefore(java.time.LocalDateTime.now())) {
+            throw new TokenExpiradoException("El token de verificación ha expirado");
+        }
+
+        Usuario usuario = tokenVerif.getUsuario();
+        EstadoUsuario estadoActivo = estadoUsuarioRepository.findByNombre("ACTIVO")
+                .orElseThrow(() -> new RuntimeException("Estado ACTIVO no encontrado"));
+
+        usuario.setEstadoUsuario(estadoActivo);
+        usuarioRepository.save(usuario);
+
+        tokenVerificacionRepository.deleteByUsuario(usuario);
+    }
+
+    private void crearYEnviarTokenVerificacion(Usuario usuario) {
+        String token = UUID.randomUUID().toString();
+        TokenVerificacion tokenVerif = TokenVerificacion.builder()
+                .token(token)
+                .fechaExpiracion(java.time.LocalDateTime.now().plusHours(24))
+                .usuario(usuario)
+                .build();
+        tokenVerificacionRepository.save(tokenVerif);
+        correoService.enviarCorreoVerificacion(usuario.getCorreo(), token);
     }
 }

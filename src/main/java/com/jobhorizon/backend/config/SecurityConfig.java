@@ -77,7 +77,8 @@ public class SecurityConfig {
                     "/auth/registro/postulante",
                     "/auth/registro/empresa",
                     "/auth/solicitar-desbloqueo",
-                    "/auth/desbloquear"
+                    "/auth/desbloquear",
+                    "/auth/verificar-correo"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/catalogos/**", "/ofertas/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
