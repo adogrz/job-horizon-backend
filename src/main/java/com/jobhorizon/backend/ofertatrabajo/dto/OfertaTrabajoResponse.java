@@ -50,4 +50,9 @@ public class OfertaTrabajoResponse {
 
     @Builder.Default
     private Set<OfertaIdiomaResponse> idiomas = new HashSet<>();
+
+    private BigDecimal pesoHabilidades;
+    private BigDecimal pesoAcademico;
+    private BigDecimal pesoExperiencia;
+    private BigDecimal pesoIdiomas;
 }
