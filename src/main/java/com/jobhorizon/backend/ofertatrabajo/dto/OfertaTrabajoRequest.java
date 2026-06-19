@@ -72,4 +72,16 @@ public class OfertaTrabajoRequest {
     @Schema(description = "Idiomas requeridos")
     @Builder.Default
     private Set<OfertaIdiomaRequest> idiomas = new HashSet<>();
+
+    @Schema(description = "Peso de habilidades en el matching (ej. 0.35)", example = "0.35")
+    private BigDecimal pesoHabilidades;
+
+    @Schema(description = "Peso de nivel académico en el matching (ej. 0.25)", example = "0.25")
+    private BigDecimal pesoAcademico;
+
+    @Schema(description = "Peso de experiencia en el matching (ej. 0.20)", example = "0.20")
+    private BigDecimal pesoExperiencia;
+
+    @Schema(description = "Peso de idiomas en el matching (ej. 0.20)", example = "0.20")
+    private BigDecimal pesoIdiomas;
 }

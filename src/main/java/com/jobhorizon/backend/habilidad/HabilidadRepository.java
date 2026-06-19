@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface HabilidadRepository extends JpaRepository<Habilidad, Integer> {
-    List<Habilidad> findByCategoriaHabilidadId(Integer idCategoriaHabilidad);
+    List<Habilidad> findByCategoriaHabilidadIdAndActivoTrue(Integer idCategoriaHabilidad);
 }

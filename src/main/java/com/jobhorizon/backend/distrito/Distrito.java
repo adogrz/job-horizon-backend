@@ -1,5 +1,7 @@
 package com.jobhorizon.backend.distrito;
 
+import com.jobhorizon.backend.catalogo.CatalogoEntidad;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Distrito {
+public class Distrito implements CatalogoEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "IdDistrito")
@@ -21,4 +23,8 @@ public class Distrito {
 
     @Column(name = "IdDepartamento", nullable = false)
     private Integer idDepartamento;
+
+    @Column(name = "Activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }

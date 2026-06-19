@@ -89,7 +89,7 @@ public class CatalogoController {
     public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<List<Distrito>>> listarDistritosPorDepartamento(
             @Parameter(description = "ID del departamento del que se desean obtener los distritos", example = "1")
             @PathVariable Integer id) {
-        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Distritos obtenidos con éxito", distritoRepository.findByIdDepartamento(id)));
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Distritos obtenidos con éxito", distritoRepository.findByIdDepartamentoAndActivoTrue(id)));
     }
 
     @Operation(summary = "Listar niveles educativos", description = "Retorna todos los niveles educativos disponibles (ej. Secundaria, Técnico, Universitario). Usar el `id` al registrar formación académica.")
@@ -119,10 +119,10 @@ public class CatalogoController {
     public ResponseEntity<com.jobhorizon.backend.config.ApiResponse<List<HabilidadResponse>>> listarHabilidadesPorCategoria(
             @Parameter(description = "ID de la categoría de habilidad", example = "1")
             @PathVariable Integer id) {
-        List<HabilidadResponse> habilidades = habilidadRepository.findByCategoriaHabilidadId(id).stream()
+        List<HabilidadResponse> habilidades = habilidadRepository.findByCategoriaHabilidadIdAndActivoTrue(id).stream()
                 .map(h -> new HabilidadResponse(h.getId(), h.getNombre(), h.getDescripcion()))
                 .toList();
-        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Habilidades obtenidas con éxito", habilidades));
+        return ResponseEntity.ok(new com.jobhorizon.backend.config.ApiResponse<>(true, "Habilidades obtenidos con éxito", habilidades));
     }
 
     @Operation(summary = "Listar niveles de habilidad", description = "Retorna todos los niveles de dominio de habilidad disponibles (ej. Básico, Intermedio, Avanzado). Usar el `id` al agregar habilidades al perfil.")

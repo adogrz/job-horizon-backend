@@ -1,0 +1,76 @@
+### Peticiones de Prueba para la Administración de Catálogos (CRUD Admin)
+### Diseñado para el HTTP Client integrado de JetBrains (IntelliJ IDEA)
+
+### ==========================================
+### 1. Autenticación de Administrador (Captura de Token)
+### ==========================================
+
+### Login como Administrador (Credenciales del .env)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "{{admin_email}}",
+  "password": "{{admin_password}}"
+}
+
+> {%
+  if (response.status === 200 && response.body.data && response.body.data.token) {
+      client.global.set("admin_token", response.body.data.token);
+      client.log("Token de administrador capturado en 'admin_token'.");
+  }
+%}
+
+### ==========================================
+### 2. Operaciones CRUD en Catálogos
+### ==========================================
+
+### Listar todos los elementos de un catálogo (incluyendo inactivos)
+### Puedes probar con: generos, idiomas, tipos-contrato, modalidades, etc.
+GET {{host}}/api/admin/catalogos/generos
+Authorization: Bearer {{admin_token}}
+
+
+### Crear un nuevo elemento en el catálogo
+POST {{host}}/api/admin/catalogos/generos
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "nombre": "NO_BINARIO"
+}
+
+> {%
+  if (response.status === 200 && response.body.data && response.body.data.id) {
+      client.global.set("nuevo_genero_id", response.body.data.id);
+      client.log("ID del nuevo género creado: " + response.body.data.id);
+  }
+%}
+
+
+### Actualizar el elemento creado
+PUT {{host}}/api/admin/catalogos/generos/{{nuevo_genero_id}}
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "nombre": "NO_BINARIO_MODIFICADO"
+}
+
+
+### Desactivar el elemento de catálogo (Soft Delete / Inactivar)
+DELETE {{host}}/api/admin/catalogos/generos/{{nuevo_genero_id}}
+Authorization: Bearer {{admin_token}}
+
+
+### Consultar la lista pública para verificar que el elemento INACTIVO ya no aparece
+GET {{host}}/catalogos/generos
+
+
+### Reactivar el elemento desactivado
+PATCH {{host}}/api/admin/catalogos/generos/{{nuevo_genero_id}}/reactivar
+Authorization: Bearer {{admin_token}}
+
+
+### Consultar la lista pública otra vez para verificar que reaparece
+GET {{host}}/catalogos/generos

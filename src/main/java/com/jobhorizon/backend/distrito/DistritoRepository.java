@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface DistritoRepository extends JpaRepository<Distrito, Integer> {
-    List<Distrito> findByIdDepartamento(Integer idDepartamento);
+    List<Distrito> findByIdDepartamentoAndActivoTrue(Integer idDepartamento);
 }

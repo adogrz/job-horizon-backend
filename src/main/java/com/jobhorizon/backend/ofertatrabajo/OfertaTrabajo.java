@@ -77,6 +77,22 @@ public class OfertaTrabajo {
     @JoinColumn(name = "IdDistrito", nullable = false)
     private Distrito distrito;
 
+    @Column(name = "PesoHabilidades", precision = 5, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal pesoHabilidades = new BigDecimal("0.35");
+
+    @Column(name = "PesoAcademico", precision = 5, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal pesoAcademico = new BigDecimal("0.25");
+
+    @Column(name = "PesoExperiencia", precision = 5, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal pesoExperiencia = new BigDecimal("0.20");
+
+    @Column(name = "PesoIdiomas", precision = 5, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal pesoIdiomas = new BigDecimal("0.20");
+
     @OneToMany(mappedBy = "oferta", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<OfertaHabilidad> habilidades = new HashSet<>();

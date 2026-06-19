@@ -1,5 +1,7 @@
 package com.jobhorizon.backend.modalidad;
 
+import com.jobhorizon.backend.catalogo.CatalogoEntidad;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Modalidad {
+public class Modalidad implements CatalogoEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "IdModalidad")
@@ -18,4 +20,8 @@ public class Modalidad {
 
     @Column(name = "Nombre", nullable = false, length = 30)
     private String nombre;
+
+    @Column(name = "Activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }

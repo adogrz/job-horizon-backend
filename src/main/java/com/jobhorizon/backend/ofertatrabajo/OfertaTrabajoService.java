@@ -71,7 +71,7 @@ public class OfertaTrabajoService {
         Distrito distrito = distritoRepository.findById(request.getIdDistrito())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Distrito no encontrado"));
 
-        OfertaTrabajo oferta = OfertaTrabajo.builder()
+        OfertaTrabajo.OfertaTrabajoBuilder builder = OfertaTrabajo.builder()
                 .titulo(request.getTitulo())
                 .descripcion(request.getDescripcion())
                 .salarioMin(request.getSalarioMin())
@@ -85,8 +85,16 @@ public class OfertaTrabajoService {
                 .nivelEducativo(nivelEducativo)
                 .modalidad(modalidad)
                 .estadoOferta(estadoActiva)
-                .distrito(distrito)
-                .build();
+                .distrito(distrito);
+
+        if (request.getPesoHabilidades() != null) {
+            builder.pesoHabilidades(request.getPesoHabilidades())
+                    .pesoAcademico(request.getPesoAcademico())
+                    .pesoExperiencia(request.getPesoExperiencia())
+                    .pesoIdiomas(request.getPesoIdiomas());
+        }
+
+        OfertaTrabajo oferta = builder.build();
 
         // Guardamos primero para tener el ID generado
         oferta = ofertaTrabajoRepository.save(oferta);
@@ -133,6 +141,18 @@ public class OfertaTrabajoService {
         oferta.setNivelEducativo(nivelEducativo);
         oferta.setModalidad(modalidad);
         oferta.setDistrito(distrito);
+
+        if (request.getPesoHabilidades() != null) {
+            oferta.setPesoHabilidades(request.getPesoHabilidades());
+            oferta.setPesoAcademico(request.getPesoAcademico());
+            oferta.setPesoExperiencia(request.getPesoExperiencia());
+            oferta.setPesoIdiomas(request.getPesoIdiomas());
+        } else {
+            oferta.setPesoHabilidades(new BigDecimal("0.35"));
+            oferta.setPesoAcademico(new BigDecimal("0.25"));
+            oferta.setPesoExperiencia(new BigDecimal("0.20"));
+            oferta.setPesoIdiomas(new BigDecimal("0.20"));
+        }
 
         // Limpiar habilidades e idiomas antiguos para que JPA los elimine de la base de datos (Orphan Removal)
         oferta.getHabilidades().clear();
@@ -249,6 +269,25 @@ public class OfertaTrabajoService {
         if (request.getFechaVencimiento() != null && !request.getFechaVencimiento().isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("La fecha de vencimiento debe ser posterior al día de hoy");
         }
+
+        BigDecimal pH = request.getPesoHabilidades();
+        BigDecimal pA = request.getPesoAcademico();
+        BigDecimal pE = request.getPesoExperiencia();
+        BigDecimal pI = request.getPesoIdiomas();
+
+        if (pH != null || pA != null || pE != null || pI != null) {
+            if (pH == null || pA == null || pE == null || pI == null) {
+                throw new IllegalArgumentException("Si se define un peso de matching, deben definirse los cuatro");
+            }
+            if (pH.compareTo(BigDecimal.ZERO) < 0 || pA.compareTo(BigDecimal.ZERO) < 0 ||
+                    pE.compareTo(BigDecimal.ZERO) < 0 || pI.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Los pesos de matching no pueden ser negativos");
+            }
+            BigDecimal suma = pH.add(pA).add(pE).add(pI);
+            if (suma.compareTo(BigDecimal.ONE) != 0) {
+                throw new IllegalArgumentException("La suma de los pesos de matching debe ser exactamente 1.0 (100%)");
+            }
+        }
     }
 
     private OfertaTrabajoResponse mapToResponse(OfertaTrabajo oferta) {
@@ -305,6 +344,10 @@ public class OfertaTrabajoService {
                 .nombreDepartamento(dptoNombre)
                 .habilidades(habilidades)
                 .idiomas(idiomas)
+                .pesoHabilidades(oferta.getPesoHabilidades())
+                .pesoAcademico(oferta.getPesoAcademico())
+                .pesoExperiencia(oferta.getPesoExperiencia())
+                .pesoIdiomas(oferta.getPesoIdiomas())
                 .build();
     }
 

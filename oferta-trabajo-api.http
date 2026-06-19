@@ -87,7 +87,11 @@ Content-Type: application/json
   ],
   "idiomas": [
     { "idIdioma": 2, "idNivelIdioma": 3 }
-  ]
+  ],
+  "pesoHabilidades": 0.40,
+  "pesoAcademico": 0.20,
+  "pesoExperiencia": 0.20,
+  "pesoIdiomas": 0.20
 }
 
 > {%
@@ -126,7 +130,11 @@ Content-Type: application/json
   ],
   "idiomas": [
     { "idIdioma": 2, "idNivelIdioma": 4 }
-  ]
+  ],
+  "pesoHabilidades": 0.30,
+  "pesoAcademico": 0.30,
+  "pesoExperiencia": 0.30,
+  "pesoIdiomas": 0.10
 }
 
 

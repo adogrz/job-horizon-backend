@@ -29,6 +29,54 @@ public class CatalogoService {
      */
     public <T> List<T> findAll(Class<T> clazz) {
         String jpql = "SELECT e FROM " + clazz.getSimpleName() + " e";
+        if (CatalogoEntidad.class.isAssignableFrom(clazz)) {
+            jpql += " WHERE e.activo = true";
+        }
+        return entityManager.createQuery(jpql, clazz).getResultList();
+    }
+
+    /**
+     * Guarda o actualiza un registro de catálogo.
+     *
+     * @param entidad la entidad del catálogo a guardar
+     * @param <T>     el tipo de la entidad
+     * @return la entidad guardada
+     */
+    @Transactional
+    public <T extends CatalogoEntidad> T save(T entidad) {
+        if (entidad.getId() == null) {
+            entityManager.persist(entidad);
+            return entidad;
+        } else {
+            return entityManager.merge(entidad);
+        }
+    }
+
+    /**
+     * Realiza un soft delete de un catálogo desactivándolo.
+     *
+     * @param clazz la clase de la entidad
+     * @param id    el identificador
+     * @param <T>   el tipo de la entidad
+     */
+    @Transactional
+    public <T extends CatalogoEntidad> void softDelete(Class<T> clazz, Object id) {
+        Optional.ofNullable(entityManager.find(clazz, id)).ifPresent(entidad -> {
+            entidad.setActivo(false);
+            entityManager.merge(entidad);
+        });
+    }
+
+    /**
+     * Recupera todos los registros de una entidad de catálogo determinada,
+     * sin aplicar filtros de estado activo (para uso administrativo).
+     *
+     * @param clazz la clase de la entidad
+     * @param <T>   el tipo de la entidad
+     * @return lista de todos los registros del catálogo
+     */
+    public <T> List<T> findAllAdmin(Class<T> clazz) {
+        String jpql = "SELECT e FROM " + clazz.getSimpleName() + " e";
         return entityManager.createQuery(jpql, clazz).getResultList();
     }
 
