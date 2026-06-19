@@ -1,5 +1,7 @@
 package com.jobhorizon.backend.niveleducativo;
 
+import com.jobhorizon.backend.catalogo.CatalogoEntidad;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NivelEducativo {
+public class NivelEducativo implements CatalogoEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "IdNivelEducativo")
@@ -21,4 +23,8 @@ public class NivelEducativo {
 
     @Column(name = "OrdenComparacion", nullable = false)
     private Byte ordenComparacion;
+
+    @Column(name = "Activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }

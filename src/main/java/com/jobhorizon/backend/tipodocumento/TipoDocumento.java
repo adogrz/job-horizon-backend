@@ -1,5 +1,7 @@
 package com.jobhorizon.backend.tipodocumento;
 
+import com.jobhorizon.backend.catalogo.CatalogoEntidad;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TipoDocumento {
+public class TipoDocumento implements CatalogoEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "IdTipoDocumento")
@@ -21,4 +23,8 @@ public class TipoDocumento {
 
     @Column(name = "Descripcion", length = 200)
     private String descripcion;
+
+    @Column(name = "Activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }

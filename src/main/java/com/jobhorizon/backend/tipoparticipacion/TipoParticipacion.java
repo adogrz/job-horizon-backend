@@ -1,5 +1,7 @@
 package com.jobhorizon.backend.tipoparticipacion;
 
+import com.jobhorizon.backend.catalogo.CatalogoEntidad;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TipoParticipacion {
+public class TipoParticipacion implements CatalogoEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "IdTipoParticipacion")
@@ -18,4 +20,8 @@ public class TipoParticipacion {
 
     @Column(name = "Nombre", nullable = false, length = 30)
     private String nombre;
+
+    @Column(name = "Activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }
